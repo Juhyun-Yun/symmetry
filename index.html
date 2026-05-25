@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>합동과 대칭 학습 앱</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+    background: linear-gradient(135deg, #fdf6e3 0%, #fff8e7 100%);
+    color: #333;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  header {
+    text-align: center;
+    padding: 20px 0 30px;
+  }
+  header h1 {
+    color: #d35400;
+    font-size: 2.2em;
+    margin-bottom: 8px;
+  }
+  header p { color: #7f8c8d; font-size: 1.05em; }
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+  .tab {
+    background: #fff;
+    border: 2px solid #e67e22;
+    color: #d35400;
+    padding: 10px 18px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .tab:hover { background: #fde8d2; }
+  .tab.active {
+    background: #e67e22;
+    color: white;
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+  }
+
+  .panel {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    display: none;
+  }
+  .panel.active { display: block; }
+
+  .panel h2 {
+    color: #d35400;
+    border-bottom: 3px solid #f39c12;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    font-size: 1.4em;
+  }
+  .description {
+    background: #fef9e7;
+    border-left: 4px solid #f1c40f;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    line-height: 1.7;
+    font-size: 0.95em;
+  }
+  .description strong { color: #c0392b; }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 800px) {
+    .workspace { grid-template-columns: 1fr; }
+  }
+
+  canvas {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none;
+    cursor: crosshair;
+  }
+
+  .controls {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .controls h3 {
+    font-size: 1em;
+    color: #2c3e50;
+    margin-bottom: 4px;
+  }
+  .btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 9px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: #2980b9; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.green { background: #27ae60; }
+  .btn.green:hover { background: #229954; }
+  .btn.red { background: #e74c3c; }
+  .btn.red:hover { background: #c0392b; }
+  .btn.purple { background: #9b59b6; }
+  .btn.purple:hover { background: #8e44ad; }
+  .btn.orange { background: #e67e22; }
+  .btn.orange:hover { background: #d35400; }
+
+  .info-box {
+    background: white;
+    border: 2px dashed #bdc3c7;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.85em;
+    line-height: 1.6;
+    color: #555;
+  }
+  .info-box .label {
+    color: #d35400;
+    font-weight: 700;
+  }
+
+  .result {
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .result.success {
+    background: #d4efdf;
+    color: #196f3d;
+    border: 2px solid #27ae60;
+  }
+  .result.fail {
+    background: #fadbd8;
+    color: #922b21;
+    border: 2px solid #e74c3c;
+  }
+
+  .slider-group { display: flex; flex-direction: column; gap: 4px; }
+  .slider-group label {
+    font-size: 0.85em;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+  }
+  input[type=range] { width: 100%; accent-color: #e67e22; }
+
+  select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 2px solid #ddd;
+    font-size: 0.9em;
+    background: white;
+  }
+
+  .legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.8em;
+    margin-top: 6px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-color {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1px solid #999;
+  }
+
+  .hint {
+    background: #ebf5fb;
+    border-left: 3px solid #3498db;
+    padding: 8px 12px;
+    font-size: 0.85em;
+    color: #1f618d;
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🔷 합동과 대칭 학습 앱 🔶</h1>
+    <p>도형을 직접 움직이고, 돌리고, 그려보며 합동과 대칭의 개념을 익혀봅시다</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-panel="p1">1. 합동 알아보기</button>
+    <button class="tab" data-panel="p2">2. 합동인 도형의 성질</button>
+    <button class="tab" data-panel="p3">3. 선대칭도형 알아보기</button>
+    <button class="tab" data-panel="p4">4. 선대칭도형 그리기</button>
+    <button class="tab" data-panel="p5">5. 점대칭도형 알아보기</button>
+    <button class="tab" data-panel="p6">6. 점대칭도형 그리기</button>
+  </div>
+
+  <!-- PANEL 1: 합동 알아보기 -->
+  <div class="panel active" id="p1">
+    <h2>1. 합동 알아보기 — 두 도형을 겹쳐 봅시다</h2>
+    <div class="description">
+      <strong>합동</strong>: 모양과 크기가 같아서 포개었을 때 <strong>완전히 겹치는</strong> 두 도형.
+      아래 파란 도형을 드래그하여 옮기고, 슬라이더로 회전시켜서 빨간 도형과 완전히 겹쳐 보세요!
+    </div>
+    <div class="workspace">
+      <canvas id="canvas1" width="640" height="480"></canvas>
+      <div class="controls">
+        <h3>🎮 조작</h3>
+        <div class="slider-group">
+          <label>회전 각도 <span id="rot1Val">0°</span></label>
+          <input type="range" id="rot1" min="0" max="360" value="0">
+        </div>
+        <button class="btn green" onclick="checkCongruent1()">✓ 합동인지 확인</button>
+        <button class="btn orange" onclick="newShape1()">🎲 새로운 도형</button>
+        <button class="btn red" onclick="resetShape1()">↺ 처음 위치로</button>
+        <div id="result1"></div>
+        <div class="info-box">
+          <span class="label">💡 도움말</span><br>
+          파란 도형을 마우스로 끌어서 빨간 도형 위로 옮기고, 슬라이더로 회전시키세요.
+          완전히 겹치면 <strong>합동</strong>입니다.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: 합동인 도형의 성질 -->
+  <div class="panel" id="p2">
+    <h2>2. 합동인 도형의 성질 — 대응점·대응변·대응각</h2>
+    <div class="description">
+      합동인 두 도형에서 포개었을 때 겹치는 <strong>점, 변, 각</strong>을 각각
+      <strong>대응점, 대응변, 대응각</strong>이라 합니다.
+      도형의 점·변·각을 클릭해 보세요. 짝이 되는 부분이 표시됩니다!
+    </div>
+    <div class="workspace">
+      <canvas id="canvas2" width="640" height="480"></canvas>
+      <div class="controls">
+        <h3>👆 클릭해서 확인</h3>
+        <select id="mode2">
+          <option value="point">대응점 찾기</option>
+          <option value="side">대응변 찾기</option>
+          <option value="angle">대응각 찾기</option>
+        </select>
+        <button class="btn orange" onclick="newShape2()">🎲 새로운 도형</button>
+        <button class="btn red" onclick="clearSelection2()">지우기</button>
+        <div class="info-box" id="info2">
+          <span class="label">선택 정보</span><br>
+          점/변/각을 클릭하면 대응되는 부분이 같은 색으로 표시됩니다.
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-color" style="background:#e74c3c"></div>점</div>
+          <div class="legend-item"><div class="legend-color" style="background:#27ae60"></div>변</div>
+          <div class="legend-item"><div class="legend-color" style="background:#9b59b6"></div>각</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: 선대칭도형 알아보기 -->
+  <div class="panel" id="p3">
+    <h2>3. 선대칭도형 알아보기 — 접어 봅시다</h2>
+    <div class="description">
+      한 직선을 따라 접었을 때 완전히 겹치는 도형을 <strong>선대칭도형</strong>,
+      그 직선을 <strong>대칭축</strong>이라 합니다.
+      도형을 골라 <strong>접기 슬라이더</strong>로 접어 보고, 대칭축 각도를 바꿔 보세요!
+    </div>
+    <div class="workspace">
+      <canvas id="canvas3" width="640" height="480"></canvas>
+      <div class="controls">
+        <h3>📐 도형 선택</h3>
+        <select id="shape3" onchange="setShape3()">
+          <option value="rect">직사각형</option>
+          <option value="rhombus">마름모</option>
+          <option value="circle">원</option>
+          <option value="triangle">정삼각형</option>
+          <option value="iso">이등변삼각형</option>
+          <option value="hex">정육각형</option>
+          <option value="heart">하트</option>
+          <option value="scalene">일반 삼각형 (대칭X)</option>
+        </select>
+        <div class="slider-group">
+          <label>접기 <span id="fold3Val">0%</span></label>
+          <input type="range" id="fold3" min="0" max="100" value="0">
+        </div>
+        <div class="slider-group">
+          <label>대칭축 각도 <span id="axis3Val">90°</span></label>
+          <input type="range" id="axis3" min="0" max="180" value="90">
+        </div>
+        <button class="btn green" onclick="checkSymmetric3()">✓ 선대칭인지 확인</button>
+        <button class="btn purple" onclick="showAllAxes3()">↔️ 모든 대칭축 보기</button>
+        <button class="btn red" onclick="resetFold3()">↺ 초기화</button>
+        <div id="result3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 4: 선대칭도형 그리기 -->
+  <div class="panel" id="p4">
+    <h2>4. 선대칭도형 그리기 — 직접 완성해 봅시다</h2>
+    <div class="description">
+      모눈종이 위에서 도형의 반쪽이 주어졌습니다. <strong>대칭축</strong>을 기준으로
+      <strong>대응점</strong>을 찍어 선대칭도형을 완성해 보세요.<br>
+      💡 대응점은 <strong>대칭축에서 수직</strong>이고 <strong>거리가 같은</strong> 곳에 있습니다!
+    </div>
+    <div class="workspace">
+      <canvas id="canvas4" width="640" height="480"></canvas>
+      <div class="controls">
+        <h3>✏️ 그리기 도구</h3>
+        <select id="problem4" onchange="loadProblem4()">
+          <option value="0">문제 1 — 사다리꼴</option>
+          <option value="1">문제 2 — 화살표</option>
+          <option value="2">문제 3 — 별 모양</option>
+          <option value="3">문제 4 — 집 모양</option>
+        </select>
+        <button class="btn green" onclick="checkDrawing4()">✓ 정답 확인</button>
+        <button class="btn purple" onclick="showHint4()">💡 힌트 보기</button>
+        <button class="btn orange" onclick="autoComplete4()">✨ 자동 완성</button>
+        <button class="btn red" onclick="clearDrawing4()">🗑 내가 찍은 점 지우기</button>
+        <div id="result4"></div>
+        <div class="info-box">
+          <span class="label">사용 방법</span><br>
+          모눈종이 위 격자점을 클릭해서 대응점을 찍으세요.
+          점을 모두 찍으면 자동으로 선이 연결됩니다.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 5: 점대칭도형 알아보기 -->
+  <div class="panel" id="p5">
+    <h2>5. 점대칭도형 알아보기 — 180° 돌려 봅시다</h2>
+    <div class="description">
+      한 도형을 어떤 점을 중심으로 <strong>180° 돌렸을 때</strong> 처음 도형과 완전히 겹치는 도형을
+      <strong>점대칭도형</strong>이라 하고, 그 점을 <strong>대칭의 중심</strong>이라 합니다.
+      슬라이더로 도형을 돌려서 확인해 보세요!
+    </div>
+    <div class="workspace">
+      <canvas id="canvas5" width="640" height="480"></canvas>
+      <div class="controls">
+        <h3>🔄 회전시키기</h3>
+        <select id="shape5" onchange="setShape5()">
+          <option value="parallel">평행사변형</option>
+          <option value="rect">직사각형</option>
+          <option value="rhombus">마름모</option>
+          <option value="circle">원</option>
+          <option value="sshape">S 모양</option>
+          <option value="hex">정육각형</option>
+          <option value="triangle">정삼각형 (대칭X)</option>
+          <option value="pentagon">정오각형 (대칭X)</option>
+        </select>
+        <div class="slider-group">
+          <label>회전 각도 <span id="rot5Val">0°</span></label>
+          <input type="range" id="rot5" min="0" max="360" value="0">
+        </div>
+        <button class="btn green" onclick="checkPointSymmetric5()">✓ 점대칭인지 확인</button>
+        <button class="btn purple" onclick="rotate180_5()">⤵ 180° 돌리기</button>
+        <button class="btn red" onclick="resetRot5()">↺ 초기화</button>
+        <div id="result5"></div>
+        <div class="hint">
+          🎯 180° 돌렸을 때 원래 도형과 완전히 겹치면 점대칭도형!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 6: 점대칭도형 그리기 -->
+  <div class="panel" id="p6">
+    <h2>6. 점대칭도형 그리기 — 대칭의 중심을 이용하여</h2>
+    <div class="description">
+      모눈종이 위에 도형의 절반과 <strong>대칭의 중심(빨간 점)</strong>이 주어졌습니다.
+      대칭의 중심을 지나도록 각 점에서 <strong>같은 거리</strong>의 반대편에 대응점을 찍어
+      점대칭도형을 완성해 보세요!
+    </div>
+    <div class="workspace">
+      <canvas id="canvas6" width="640" height="480"></canvas>
+      <div class="controls">
+        <h3>✏️ 그리기 도구</h3>
+        <select id="problem6" onchange="loadProblem6()">
+          <option value="0">문제 1 — 깃발</option>
+          <option value="1">문제 2 — 화살</option>
+          <option value="2">문제 3 — 지그재그</option>
+          <option value="3">문제 4 — 갈고리</option>
+        </select>
+        <button class="btn green" onclick="checkDrawing6()">✓ 정답 확인</button>
+        <button class="btn purple" onclick="showHint6()">💡 힌트 보기</button>
+        <button class="btn orange" onclick="autoComplete6()">✨ 자동 완성</button>
+        <button class="btn red" onclick="clearDrawing6()">🗑 내가 찍은 점 지우기</button>
+        <div id="result6"></div>
+        <div class="info-box">
+          <span class="label">사용 방법</span><br>
+          빨간 점이 대칭의 중심입니다. 주어진 점에서 대칭의 중심을 지나
+          <strong>같은 거리</strong>만큼 반대쪽에 점을 찍으세요.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============= 공통 유틸 =============
+function setupCanvas(canvas) {
+  const ratio = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * ratio;
+  canvas.height = rect.height * ratio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(ratio, ratio);
+  return { ctx, w: rect.width, h: rect.height };
+}
+
+function getMousePos(canvas, e) {
+  const rect = canvas.getBoundingClientRect();
+  const cx = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+  const cy = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+  return { x: cx - rect.left, y: cy - rect.top };
+}
+
+function drawGrid(ctx, w, h, gridSize) {
+  if (!gridSize) gridSize = 20;
+  ctx.strokeStyle = '#e8eef5';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= w; x += gridSize) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+  for (let y = 0; y <= h; y += gridSize) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+}
+
+function rotatePoint(p, cx, cy, angleDeg) {
+  const rad = angleDeg * Math.PI / 180;
+  const cos = Math.cos(rad), sin = Math.sin(rad);
+  return {
+    x: cos * (p.x - cx) - sin * (p.y - cy) + cx,
+    y: sin * (p.x - cx) + cos * (p.y - cy) + cy
+  };
+}
+
+function drawShape(ctx, pts, fill, stroke, lineWidth) {
+  if (!lineWidth) lineWidth = 2.5;
+  if (pts.length === 0) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lineWidth; ctx.stroke(); }
+}
+
+function drawDot(ctx, p, color, r) {
+  if (!r) r = 4;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function tabSwitch() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.panel).classList.add('active');
+      // 캔버스 다시 그리기 - 패널 보여진 후 init 호출
+      const pid = tab.dataset.panel;
+      setTimeout(() => {
+        if (pid === 'p1') initPanel1();
+        if (pid === 'p2') initPanel2();
+        if (pid === 'p3') initPanel3();
+        if (pid === 'p4') initPanel4();
+        if (pid === 'p5') initPanel5();
+        if (pid === 'p6') initPanel6();
+      }, 10);
+    };
+  });
+}
+
+// ============= PANEL 1: 합동 =============
+const canvas1 = document.getElementById('canvas1');
+let ctx1, w1, h1;
+let shape1Red, shape1Blue, blueTransform;
+let dragging1 = false, dragOffset1 = {x:0, y:0};
+let panel1Inited = false;
+
+function genRandomShape() {
+  const cx = 0, cy = 0;
+  const n = 3 + Math.floor(Math.random() * 3);
+  const points = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+    const r = 50 + Math.random() * 40;
+    points.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+  }
+  return points;
+}
+
+function initPanel1() {
+  const dim = setupCanvas(canvas1);
+  ctx1 = dim.ctx; w1 = dim.w; h1 = dim.h;
+  if (!panel1Inited) {
+    newShape1();
+    canvas1.addEventListener('mousedown', startDrag1);
+    canvas1.addEventListener('mousemove', drag1);
+    canvas1.addEventListener('mouseup', endDrag1);
+    canvas1.addEventListener('mouseleave', endDrag1);
+    canvas1.addEventListener('touchstart', startDrag1, { passive: false });
+    canvas1.addEventListener('touchmove', drag1, { passive: false });
+    canvas1.addEventListener('touchend', endDrag1);
+    document.getElementById('rot1').addEventListener('input', e => {
+      blueTransform.rot = parseFloat(e.target.value);
+      document.getElementById('rot1Val').textContent = blueTransform.rot + '°';
+      drawCanvas1();
+    });
+    panel1Inited = true;
+  } else {
+    drawCanvas1();
+  }
+}
+
+function newShape1() {
+  shape1Red = genRandomShape();
+  if (Math.random() < 0.6) {
+    shape1Blue = shape1Red.map(p => ({ ...p }));
+  } else {
+    shape1Blue = genRandomShape();
+  }
+  blueTransform = { x: 450, y: 240, rot: 0 };
+  document.getElementById('rot1').value = 0;
+  document.getElementById('rot1Val').textContent = '0°';
+  document.getElementById('result1').innerHTML = '';
+  drawCanvas1();
+}
+
+function resetShape1() {
+  blueTransform = { x: 450, y: 240, rot: 0 };
+  document.getElementById('rot1').value = 0;
+  document.getElementById('rot1Val').textContent = '0°';
+  document.getElementById('result1').innerHTML = '';
+  drawCanvas1();
+}
+
+function getTransformedBlue() {
+  return shape1Blue.map(p => {
+    const r = rotatePoint(p, 0, 0, blueTransform.rot);
+    return { x: r.x + blueTransform.x, y: r.y + blueTransform.y };
+  });
+}
+
+function drawCanvas1() {
+  if (!ctx1) return;
+  ctx1.clearRect(0, 0, w1, h1);
+  drawGrid(ctx1, w1, h1);
+  const redShifted = shape1Red.map(p => ({ x: p.x + 180, y: p.y + 240 }));
+  drawShape(ctx1, redShifted, 'rgba(231, 76, 60, 0.5)', '#c0392b', 3);
+  const blue = getTransformedBlue();
+  drawShape(ctx1, blue, 'rgba(52, 152, 219, 0.6)', '#2980b9', 3);
+  ctx1.fillStyle = '#333';
+  ctx1.font = 'bold 14px sans-serif';
+  ctx1.fillText('빨간 도형 (고정)', 110, 30);
+  ctx1.fillText('파란 도형 (드래그/회전 가능)', 380, 30);
+}
+
+function pointInPolygon(p, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x, yi = poly[i].y;
+    const xj = poly[j].x, yj = poly[j].y;
+    const intersect = ((yi > p.y) !== (yj > p.y)) &&
+      (p.x < (xj - xi) * (p.y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function startDrag1(e) {
+  e.preventDefault();
+  const pos = getMousePos(canvas1, e);
+  const blue = getTransformedBlue();
+  if (pointInPolygon(pos, blue)) {
+    dragging1 = true;
+    dragOffset1 = { x: pos.x - blueTransform.x, y: pos.y - blueTransform.y };
+  }
+}
+function drag1(e) {
+  if (!dragging1) return;
+  e.preventDefault();
+  const pos = getMousePos(canvas1, e);
+  blueTransform.x = pos.x - dragOffset1.x;
+  blueTransform.y = pos.y - dragOffset1.y;
+  drawCanvas1();
+}
+function endDrag1() { dragging1 = false; }
+
+function checkCongruent1() {
+  function edgeLengths(pts) {
+    const arr = [];
+    for (let i = 0; i < pts.length; i++) {
+      const j = (i + 1) % pts.length;
+      arr.push(Math.hypot(pts[j].x - pts[i].x, pts[j].y - pts[i].y));
+    }
+    return arr.sort((a, b) => a - b);
+  }
+  const e1 = edgeLengths(shape1Red);
+  const e2 = edgeLengths(shape1Blue);
+  let isCongruentShape = e1.length === e2.length;
+  if (isCongruentShape) {
+    for (let i = 0; i < e1.length; i++) {
+      if (Math.abs(e1[i] - e2[i]) > 0.5) isCongruentShape = false;
+    }
+  }
+
+  const blue = getTransformedBlue();
+  const redShifted = shape1Red.map(p => ({ x: p.x + 180, y: p.y + 240 }));
+
+  let overlap = false;
+  if (isCongruentShape) {
+    const n = redShifted.length;
+    for (let offset = 0; offset < n; offset++) {
+      let allMatch = true;
+      for (let i = 0; i < n; i++) {
+        const r = redShifted[i];
+        const b = blue[(i + offset) % n];
+        if (Math.hypot(r.x - b.x, r.y - b.y) > 18) { allMatch = false; break; }
+      }
+      if (allMatch) { overlap = true; break; }
+    }
+  }
+
+  const res = document.getElementById('result1');
+  if (isCongruentShape && overlap) {
+    res.className = 'result success';
+    res.innerHTML = '🎉 완벽! 두 도형은 <strong>합동</strong>입니다.<br>완전히 겹쳐졌어요!';
+  } else if (isCongruentShape && !overlap) {
+    res.className = 'result fail';
+    res.innerHTML = '두 도형은 <strong>합동</strong>이지만 아직 겹쳐지지 않았어요.<br>더 정확히 옮기고 돌려보세요!';
+  } else {
+    res.className = 'result fail';
+    res.innerHTML = '두 도형은 <strong>합동이 아닙니다</strong>.<br>모양과 크기가 달라요. 새로운 도형으로 시도해 보세요!';
+  }
+}
+
+// ============= PANEL 2: 합동인 도형의 성질 =============
+const canvas2 = document.getElementById('canvas2');
+let ctx2, w2, h2;
+let shape2A, shape2B;
+let selected2 = null;
+let permutation2;
+let panel2Inited = false;
+
+function initPanel2() {
+  const dim = setupCanvas(canvas2);
+  ctx2 = dim.ctx; w2 = dim.w; h2 = dim.h;
+  if (!panel2Inited) {
+    newShape2();
+    canvas2.addEventListener('click', onClick2);
+    panel2Inited = true;
+  } else {
+    drawCanvas2();
+  }
+}
+
+function newShape2() {
+  const base = genRandomShape();
+  shape2A = base.map(p => ({ x: p.x + 180, y: p.y + 240 }));
+  const flip = Math.random() < 0.4 ? -1 : 1;
+  const rot = Math.random() * 360;
+  const rotated = base.map(p => {
+    const flipped = { x: p.x * flip, y: p.y };
+    return rotatePoint(flipped, 0, 0, rot);
+  });
+  const offset = Math.floor(Math.random() * rotated.length);
+  let reordered = [];
+  for (let i = 0; i < rotated.length; i++) {
+    reordered.push(rotated[(i + offset) % rotated.length]);
+  }
+  if (flip === -1) reordered.reverse();
+  shape2B = reordered.map(p => ({ x: p.x + 460, y: p.y + 240 }));
+
+  permutation2 = [];
+  for (let i = 0; i < base.length; i++) {
+    let bIdx;
+    if (flip === -1) {
+      bIdx = (rotated.length - 1) - ((i - offset + rotated.length) % rotated.length);
+    } else {
+      bIdx = (i - offset + rotated.length) % rotated.length;
+    }
+    permutation2.push(bIdx);
+  }
+  selected2 = null;
+  drawCanvas2();
+  updateInfo2('');
+}
+
+function clearSelection2() {
+  selected2 = null;
+  drawCanvas2();
+  updateInfo2('');
+}
+
+function drawCanvas2() {
+  if (!ctx2) return;
+  ctx2.clearRect(0, 0, w2, h2);
+  drawGrid(ctx2, w2, h2);
+
+  drawShape(ctx2, shape2A, 'rgba(241, 196, 15, 0.3)', '#f39c12', 2.5);
+  drawShape(ctx2, shape2B, 'rgba(52, 152, 219, 0.3)', '#2980b9', 2.5);
+
+  const labels = '가나다라마바'.split('');
+  shape2A.forEach((p, i) => {
+    ctx2.fillStyle = '#7f8c8d';
+    ctx2.font = 'bold 13px sans-serif';
+    ctx2.fillText(labels[i], p.x - 5, p.y - 8);
+  });
+  const labelsB = 'ㄱㄴㄷㄹㅁㅂ'.split('');
+  shape2B.forEach((p, i) => {
+    ctx2.fillStyle = '#7f8c8d';
+    ctx2.font = 'bold 13px sans-serif';
+    ctx2.fillText(labelsB[i], p.x - 5, p.y - 8);
+  });
+
+  if (selected2) {
+    const { type, shape, idx } = selected2;
+    const ptsA = shape2A, ptsB = shape2B;
+    const aIdx = shape === 'A' ? idx : permutation2.indexOf(idx);
+    const bIdx = shape === 'B' ? idx : permutation2[idx];
+
+    if (type === 'point') {
+      highlightPoint(ptsA[aIdx], '#e74c3c');
+      highlightPoint(ptsB[bIdx], '#e74c3c');
+      updateInfo2(`<span class="label">대응점</span>: 점 ${labels[aIdx]} ↔ 점 ${labelsB[bIdx]}`);
+    } else if (type === 'side') {
+      const aN = ptsA.length;
+      const aNext = (aIdx + 1) % aN;
+      const bIdx1 = permutation2[aIdx];
+      const bIdx2 = permutation2[aNext];
+      highlightSide(ptsA[aIdx], ptsA[aNext], '#27ae60');
+      highlightSide(ptsB[bIdx1], ptsB[bIdx2], '#27ae60');
+      const lenA = Math.hypot(ptsA[aNext].x - ptsA[aIdx].x, ptsA[aNext].y - ptsA[aIdx].y);
+      const lenB = Math.hypot(ptsB[bIdx2].x - ptsB[bIdx1].x, ptsB[bIdx2].y - ptsB[bIdx1].y);
+      updateInfo2(`<span class="label">대응변</span>: 변 ${labels[aIdx]}${labels[aNext]} ↔ 변 ${labelsB[bIdx1]}${labelsB[bIdx2]}<br>길이: ${lenA.toFixed(1)} ≒ ${lenB.toFixed(1)} ✓`);
+    } else if (type === 'angle') {
+      const bIdxV = permutation2[aIdx];
+      highlightAngle(ctx2, ptsA, aIdx, '#9b59b6');
+      highlightAngle(ctx2, ptsB, bIdxV, '#9b59b6');
+      const angA = computeAngle(ptsA, aIdx);
+      const angB = computeAngle(ptsB, bIdxV);
+      updateInfo2(`<span class="label">대응각</span>: 각 ${labels[aIdx]} ↔ 각 ${labelsB[bIdxV]}<br>크기: ${angA.toFixed(0)}° ≒ ${angB.toFixed(0)}° ✓`);
+    }
+  }
+
+  shape2A.forEach(p => drawDot(ctx2, p, '#34495e', 4));
+  shape2B.forEach(p => drawDot(ctx2, p, '#34495e', 4));
+}
+
+function highlightPoint(p, color) {
+  ctx2.fillStyle = color;
+  ctx2.beginPath();
+  ctx2.arc(p.x, p.y, 10, 0, Math.PI * 2);
+  ctx2.fill();
+}
+function highlightSide(p1, p2, color) {
+  ctx2.strokeStyle = color;
+  ctx2.lineWidth = 6;
+  ctx2.beginPath();
+  ctx2.moveTo(p1.x, p1.y);
+  ctx2.lineTo(p2.x, p2.y);
+  ctx2.stroke();
+}
+function highlightAngle(ctx, pts, idx, color) {
+  const n = pts.length;
+  const p = pts[idx];
+  const prev = pts[(idx - 1 + n) % n];
+  const next = pts[(idx + 1) % n];
+  const a1 = Math.atan2(prev.y - p.y, prev.x - p.x);
+  const a2 = Math.atan2(next.y - p.y, next.x - p.x);
+  ctx.fillStyle = color + '55';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  // 작은 각 방향으로 호 그리기
+  let diff = a2 - a1;
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  ctx.arc(p.x, p.y, 25, a1, a1 + diff, diff < 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
+function computeAngle(pts, idx) {
+  const n = pts.length;
+  const p = pts[idx];
+  const prev = pts[(idx - 1 + n) % n];
+  const next = pts[(idx + 1) % n];
+  const v1 = { x: prev.x - p.x, y: prev.y - p.y };
+  const v2 = { x: next.x - p.x, y: next.y - p.y };
+  const dot = v1.x * v2.x + v1.y * v2.y;
+  const m1 = Math.hypot(v1.x, v1.y);
+  const m2 = Math.hypot(v2.x, v2.y);
+  return Math.acos(Math.max(-1, Math.min(1, dot / (m1 * m2)))) * 180 / Math.PI;
+}
+
+function onClick2(e) {
+  const pos = getMousePos(canvas2, e);
+  const mode = document.getElementById('mode2').value;
+  for (const item of [['A', shape2A], ['B', shape2B]]) {
+    const shape = item[0], pts = item[1];
+    if (mode === 'point') {
+      for (let i = 0; i < pts.length; i++) {
+        if (Math.hypot(pts[i].x - pos.x, pts[i].y - pos.y) < 15) {
+          selected2 = { type: 'point', shape, idx: i };
+          drawCanvas2();
+          return;
+        }
+      }
+    } else if (mode === 'side') {
+      for (let i = 0; i < pts.length; i++) {
+        const j = (i + 1) % pts.length;
+        if (distToSegment(pos, pts[i], pts[j]) < 10) {
+          selected2 = { type: 'side', shape, idx: i };
+          drawCanvas2();
+          return;
+        }
+      }
+    } else if (mode === 'angle') {
+      for (let i = 0; i < pts.length; i++) {
+        if (Math.hypot(pts[i].x - pos.x, pts[i].y - pos.y) < 30) {
+          selected2 = { type: 'angle', shape, idx: i };
+          drawCanvas2();
+          return;
+        }
+      }
+    }
+  }
+}
+
+function distToSegment(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  const px = a.x + t * dx, py = a.y + t * dy;
+  return Math.hypot(px - p.x, py - p.y);
+}
+
+function updateInfo2(html) {
+  document.getElementById('info2').innerHTML = html ||
+    '<span class="label">선택 정보</span><br>점/변/각을 클릭하면 대응되는 부분이 같은 색으로 표시됩니다.';
+}
+
+// ============= PANEL 3: 선대칭도형 =============
+const canvas3 = document.getElementById('canvas3');
+let ctx3, w3, h3;
+let shape3Type = 'rect';
+let foldAmount = 0, axisAngle = 90;
+let showAllAxes = false;
+let panel3Inited = false;
+
+const shape3Defs = {
+  rect: { pts: [[-100,-60],[100,-60],[100,60],[-100,60]], symmetric: true, axes: ['v','h'] },
+  rhombus: { pts: [[0,-80],[80,0],[0,80],[-80,0]], symmetric: true, axes: ['v','h'] },
+  circle: { pts: 'circle', symmetric: true, axes: 'all' },
+  triangle: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<3;i++){const a=-Math.PI/2 + i*2*Math.PI/3; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: true, axesNum: 3 },
+  iso: { pts: [[0,-80],[70,60],[-70,60]], symmetric: true, axes: ['v'] },
+  hex: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<6;i++){const a=i*Math.PI/3; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: true, axesNum: 6 },
+  heart: { pts: (function() {
+    const arr = [];
+    for (let t = 0; t < Math.PI * 2; t += 0.1) {
+      const x = 5 * (16 * Math.pow(Math.sin(t), 3));
+      const y = -5 * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+      arr.push([x, y]);
+    }
+    return arr;
+  })(), symmetric: true, axes: ['v'] },
+  scalene: { pts: [[-80,-50],[80,-20],[20,80]], symmetric: false, axes: [] }
+};
+
+function initPanel3() {
+  const dim = setupCanvas(canvas3);
+  ctx3 = dim.ctx; w3 = dim.w; h3 = dim.h;
+  if (!panel3Inited) {
+    document.getElementById('fold3').addEventListener('input', e => {
+      foldAmount = parseFloat(e.target.value);
+      document.getElementById('fold3Val').textContent = foldAmount + '%';
+      drawCanvas3();
+    });
+    document.getElementById('axis3').addEventListener('input', e => {
+      axisAngle = parseFloat(e.target.value);
+      document.getElementById('axis3Val').textContent = axisAngle + '°';
+      drawCanvas3();
+    });
+    panel3Inited = true;
+  }
+  drawCanvas3();
+}
+
+function setShape3() {
+  shape3Type = document.getElementById('shape3').value;
+  showAllAxes = false;
+  document.getElementById('result3').innerHTML = '';
+  drawCanvas3();
+}
+
+function resetFold3() {
+  foldAmount = 0;
+  document.getElementById('fold3').value = 0;
+  document.getElementById('fold3Val').textContent = '0%';
+  showAllAxes = false;
+  drawCanvas3();
+}
+
+function getShape3Pts() {
+  const def = shape3Defs[shape3Type];
+  if (def.pts === 'circle') {
+    const arr = [];
+    for (let i = 0; i < 60; i++) {
+      const a = i / 60 * Math.PI * 2;
+      arr.push([80 * Math.cos(a), 80 * Math.sin(a)]);
+    }
+    return arr;
+  }
+  return def.pts;
+}
+
+function reflectAcrossLine(p, linePt, lineDir) {
+  const dx = p.x - linePt.x, dy = p.y - linePt.y;
+  const d = lineDir.x * dx + lineDir.y * dy;
+  const fx = linePt.x + lineDir.x * d;
+  const fy = linePt.y + lineDir.y * d;
+  return { x: 2 * fx - p.x, y: 2 * fy - p.y };
+}
+
+function drawCanvas3() {
+  if (!ctx3) return;
+  ctx3.clearRect(0, 0, w3, h3);
+  drawGrid(ctx3, w3, h3);
+
+  const cx = w3 / 2, cy = h3 / 2;
+  const pts = getShape3Pts().map(p => ({ x: p[0] + cx, y: p[1] + cy }));
+
+  const axisRad = axisAngle * Math.PI / 180;
+  const dx = Math.cos(axisRad), dy = Math.sin(axisRad);
+
+  // 모든 대칭축
+  if (showAllAxes && shape3Defs[shape3Type].symmetric) {
+    ctx3.strokeStyle = 'rgba(155, 89, 182, 0.5)';
+    ctx3.lineWidth = 1.5;
+    ctx3.setLineDash([4, 4]);
+    const def = shape3Defs[shape3Type];
+    const axesToDraw = [];
+    if (def.axes === 'all') {
+      for (let i = 0; i < 12; i++) axesToDraw.push(i * 15);
+    } else if (def.axesNum) {
+      for (let i = 0; i < def.axesNum; i++) axesToDraw.push(i * 180 / def.axesNum + (shape3Type === 'triangle' ? 90 : 0));
+    } else if (def.axes) {
+      def.axes.forEach(a => {
+        if (a === 'v') axesToDraw.push(90);
+        if (a === 'h') axesToDraw.push(0);
+      });
+    }
+    axesToDraw.forEach(deg => {
+      const r = deg * Math.PI / 180;
+      const cd = Math.cos(r), sd = Math.sin(r);
+      ctx3.beginPath();
+      ctx3.moveTo(cx - cd * 300, cy - sd * 300);
+      ctx3.lineTo(cx + cd * 300, cy + sd * 300);
+      ctx3.stroke();
+    });
+    ctx3.setLineDash([]);
+  }
+
+  // 현재 대칭축
+  ctx3.strokeStyle = '#9b59b6';
+  ctx3.lineWidth = 2.5;
+  ctx3.setLineDash([8, 4]);
+  ctx3.beginPath();
+  ctx3.moveTo(cx - dx * 300, cy - dy * 300);
+  ctx3.lineTo(cx + dx * 300, cy + dy * 300);
+  ctx3.stroke();
+  ctx3.setLineDash([]);
+
+  const t = foldAmount / 100;
+
+  // 접히는 쪽(perp > 0)을 보간해서 그리기
+  function foldPoint(p, tt) {
+    const reflected = reflectAcrossLine(p, { x: cx, y: cy }, { x: dx, y: dy });
+    return {
+      x: p.x * (1 - tt) + reflected.x * tt,
+      y: p.y * (1 - tt) + reflected.y * tt
+    };
+  }
+
+  // 원본 도형 (반투명)
+  drawShape(ctx3, pts, 'rgba(52, 152, 219, 0.15)', '#3498db', 2);
+
+  // 접힌 모양 = 윗부분(perp<=0) 그대로 + 아랫부분(perp>0) foldPoint 보간
+  if (t > 0) {
+    const foldedPts = pts.map(p => {
+      const px = p.x - cx, py = p.y - cy;
+      const perp = -dy * px + dx * py;
+      if (perp > 0) return foldPoint(p, t);
+      return { x: p.x, y: p.y };
+    });
+    drawShape(ctx3, foldedPts, `rgba(231, 76, 60, ${0.2 + t * 0.4})`, '#e74c3c', 2);
+  }
+
+  // 라벨
+  ctx3.fillStyle = '#7f8c8d';
+  ctx3.font = '12px sans-serif';
+  ctx3.fillText('파란색: 원래 도형  |  빨간색: 접은 모양  |  보라색 점선: 대칭축', 10, 20);
+}
+
+function checkSymmetric3() {
+  const def = shape3Defs[shape3Type];
+  const res = document.getElementById('result3');
+  if (!def.symmetric) {
+    res.className = 'result fail';
+    res.innerHTML = '❌ 이 도형은 <strong>선대칭도형이 아닙니다</strong>.<br>어느 직선으로 접어도 완전히 겹치지 않아요.';
+    return;
+  }
+  const cx = w3 / 2, cy = h3 / 2;
+  const pts = getShape3Pts().map(p => ({ x: p[0] + cx, y: p[1] + cy }));
+  const axisRad = axisAngle * Math.PI / 180;
+  const dir = { x: Math.cos(axisRad), y: Math.sin(axisRad) };
+  const reflected = pts.map(p => reflectAcrossLine(p, { x: cx, y: cy }, dir));
+  let allMatch = true;
+  for (const r of reflected) {
+    let matched = false;
+    for (const p of pts) {
+      if (Math.hypot(r.x - p.x, r.y - p.y) < 10) { matched = true; break; }
+    }
+    if (!matched) { allMatch = false; break; }
+  }
+  if (allMatch && foldAmount > 85) {
+    res.className = 'result success';
+    res.innerHTML = '🎉 정답! 이 도형은 <strong>선대칭도형</strong>이고,<br>지금 그은 직선이 <strong>대칭축</strong>입니다!';
+  } else if (allMatch) {
+    res.className = 'result success';
+    res.innerHTML = '✓ 대칭축을 올바르게 찾았어요!<br>접기 슬라이더를 100%로 올려서 완전히 겹치는 모습을 확인해 보세요.';
+  } else {
+    res.className = 'result fail';
+    res.innerHTML = '이 직선은 대칭축이 아닙니다.<br>접었을 때 완전히 겹치지 않아요. 다른 각도로 시도해 보세요!';
+  }
+}
+
+function showAllAxes3() {
+  showAllAxes = !showAllAxes;
+  drawCanvas3();
+}
+
+// ============= PANEL 4: 선대칭도형 그리기 =============
+const canvas4 = document.getElementById('canvas4');
+let ctx4, w4, h4;
+const GRID4 = 25;
+let problem4Idx = 0;
+let userPoints4 = [];
+let showHintMode4 = false;
+let panel4Inited = false;
+
+const problems4 = [
+  {
+    name: '사다리꼴',
+    axis: 'vertical', axisX: 11,
+    given: [[5,4],[5,10],[8,10],[10,4]]
+  },
+  {
+    name: '화살표',
+    axis: 'horizontal', axisY: 8,
+    given: [[3,8],[3,5],[9,5],[9,2],[14,8]]
+  },
+  {
+    name: '별 모양',
+    axis: 'vertical', axisX: 11,
+    given: [[3,4],[6,6],[2,8],[7,9],[11,12]]
+  },
+  {
+    name: '집 모양',
+    axis: 'vertical', axisX: 11,
+    given: [[6,11],[6,7],[11,3]]
+  }
+];
+
+function initPanel4() {
+  const dim = setupCanvas(canvas4);
+  ctx4 = dim.ctx; w4 = dim.w; h4 = dim.h;
+  if (!panel4Inited) {
+    canvas4.addEventListener('click', onClick4);
+    panel4Inited = true;
+  }
+  loadProblem4();
+}
+
+function loadProblem4() {
+  problem4Idx = parseInt(document.getElementById('problem4').value);
+  userPoints4 = [];
+  showHintMode4 = false;
+  document.getElementById('result4').innerHTML = '';
+  drawCanvas4();
+}
+
+function clearDrawing4() {
+  userPoints4 = [];
+  showHintMode4 = false;
+  document.getElementById('result4').innerHTML = '';
+  drawCanvas4();
+}
+
+function gridToPx4(gx, gy) {
+  return { x: 50 + gx * GRID4, y: 30 + gy * GRID4 };
+}
+function pxToGrid4(px, py) {
+  return { gx: Math.round((px - 50) / GRID4), gy: Math.round((py - 30) / GRID4) };
+}
+
+function drawCanvas4() {
+  if (!ctx4) return;
+  ctx4.clearRect(0, 0, w4, h4);
+  ctx4.strokeStyle = '#dcecf9';
+  ctx4.lineWidth = 1;
+  const gridCols = Math.floor((w4 - 60) / GRID4);
+  const gridRows = Math.floor((h4 - 40) / GRID4);
+  for (let gx = 0; gx <= gridCols; gx++) {
+    const x = 50 + gx * GRID4;
+    ctx4.beginPath(); ctx4.moveTo(x, 30); ctx4.lineTo(x, 30 + gridRows * GRID4); ctx4.stroke();
+  }
+  for (let gy = 0; gy <= gridRows; gy++) {
+    const y = 30 + gy * GRID4;
+    ctx4.beginPath(); ctx4.moveTo(50, y); ctx4.lineTo(50 + gridCols * GRID4, y); ctx4.stroke();
+  }
+  ctx4.fillStyle = '#b0c4d4';
+  for (let gx = 0; gx <= gridCols; gx++) {
+    for (let gy = 0; gy <= gridRows; gy++) {
+      const p = gridToPx4(gx, gy);
+      ctx4.beginPath(); ctx4.arc(p.x, p.y, 1.5, 0, Math.PI * 2); ctx4.fill();
+    }
+  }
+
+  const prob = problems4[problem4Idx];
+
+  // 대칭축
+  ctx4.strokeStyle = '#9b59b6';
+  ctx4.lineWidth = 2.5;
+  ctx4.setLineDash([8, 4]);
+  if (prob.axis === 'vertical') {
+    const ax = gridToPx4(prob.axisX, 0).x;
+    ctx4.beginPath(); ctx4.moveTo(ax, 20); ctx4.lineTo(ax, 30 + gridRows * GRID4 + 10); ctx4.stroke();
+    ctx4.fillStyle = '#9b59b6';
+    ctx4.font = 'bold 12px sans-serif';
+    ctx4.fillText('대칭축', ax + 5, 18);
+  } else {
+    const ay = gridToPx4(0, prob.axisY).y;
+    ctx4.beginPath(); ctx4.moveTo(40, ay); ctx4.lineTo(50 + gridCols * GRID4, ay); ctx4.stroke();
+    ctx4.fillStyle = '#9b59b6';
+    ctx4.font = 'bold 12px sans-serif';
+    ctx4.fillText('대칭축', 5, ay - 5);
+  }
+  ctx4.setLineDash([]);
+
+  // 주어진 도형
+  const givenPx = prob.given.map(p => gridToPx4(p[0], p[1]));
+  ctx4.strokeStyle = '#2980b9';
+  ctx4.lineWidth = 3;
+  ctx4.beginPath();
+  ctx4.moveTo(givenPx[0].x, givenPx[0].y);
+  for (let i = 1; i < givenPx.length; i++) ctx4.lineTo(givenPx[i].x, givenPx[i].y);
+  ctx4.stroke();
+  givenPx.forEach(p => drawDot(ctx4, p, '#2980b9', 5));
+
+  const correctMirror = getMirroredPoints4();
+
+  // 힌트
+  if (showHintMode4) {
+    correctMirror.forEach(p => {
+      const pxp = gridToPx4(p[0], p[1]);
+      ctx4.strokeStyle = '#27ae60';
+      ctx4.lineWidth = 2;
+      ctx4.setLineDash([3, 3]);
+      ctx4.beginPath();
+      ctx4.arc(pxp.x, pxp.y, 9, 0, Math.PI * 2);
+      ctx4.stroke();
+      ctx4.setLineDash([]);
+    });
+    // 대응점 연결선
+    prob.given.forEach((p, i) => {
+      const start = gridToPx4(p[0], p[1]);
+      const m = gridToPx4(correctMirror[correctMirror.length - 1 - i][0], correctMirror[correctMirror.length - 1 - i][1]);
+      ctx4.strokeStyle = 'rgba(39, 174, 96, 0.4)';
+      ctx4.lineWidth = 1;
+      ctx4.setLineDash([2, 4]);
+      ctx4.beginPath();
+      ctx4.moveTo(start.x, start.y);
+      ctx4.lineTo(m.x, m.y);
+      ctx4.stroke();
+      ctx4.setLineDash([]);
+    });
+  }
+
+  // 사용자가 찍은 점들과 선
+  if (userPoints4.length >= 1) {
+    ctx4.strokeStyle = '#e67e22';
+    ctx4.lineWidth = 2.5;
+    ctx4.beginPath();
+    const lastGiven = givenPx[givenPx.length - 1];
+    ctx4.moveTo(lastGiven.x, lastGiven.y);
+    userPoints4.forEach(p => {
+      const px = gridToPx4(p[0], p[1]);
+      ctx4.lineTo(px.x, px.y);
+    });
+    if (userPoints4.length === givenPx.length) {
+      ctx4.lineTo(givenPx[0].x, givenPx[0].y);
+    }
+    ctx4.stroke();
+    userPoints4.forEach(p => drawDot(ctx4, gridToPx4(p[0], p[1]), '#e67e22', 6));
+  }
+}
+
+function getMirroredPoints4() {
+  const prob = problems4[problem4Idx];
+  const reversed = [];
+  for (let i = prob.given.length - 1; i >= 0; i--) reversed.push(prob.given[i]);
+  return reversed.map(p => {
+    if (prob.axis === 'vertical') {
+      return [2 * prob.axisX - p[0], p[1]];
+    } else {
+      return [p[0], 2 * prob.axisY - p[1]];
+    }
+  });
+}
+
+function onClick4(e) {
+  const pos = getMousePos(canvas4, e);
+  const g = pxToGrid4(pos.x, pos.y);
+  const prob = problems4[problem4Idx];
+  if (g.gx < 0 || g.gy < 0) return;
+  if (prob.axis === 'vertical') {
+    if (g.gx <= prob.axisX) return;
+  } else {
+    if (g.gy <= prob.axisY) return;
+  }
+  const existingIdx = userPoints4.findIndex(p => p[0] === g.gx && p[1] === g.gy);
+  if (existingIdx >= 0) {
+    userPoints4.splice(existingIdx, 1);
+  } else {
+    if (userPoints4.length >= prob.given.length) {
+      userPoints4.shift();
+    }
+    userPoints4.push([g.gx, g.gy]);
+  }
+  drawCanvas4();
+}
+
+function checkDrawing4() {
+  const correct = getMirroredPoints4();
+  const res = document.getElementById('result4');
+  if (userPoints4.length !== correct.length) {
+    res.className = 'result fail';
+    res.innerHTML = `점이 부족하거나 많아요. (필요한 점: ${correct.length}개, 찍은 점: ${userPoints4.length}개)`;
+    return;
+  }
+  let allMatch = true;
+  for (let i = 0; i < correct.length; i++) {
+    if (userPoints4[i][0] !== correct[i][0] || userPoints4[i][1] !== correct[i][1]) {
+      allMatch = false; break;
+    }
+  }
+  if (allMatch) {
+    res.className = 'result success';
+    res.innerHTML = '🎉 완벽한 선대칭도형이에요!<br>대응점이 대칭축에서 같은 거리에 있어요!';
+  } else {
+    res.className = 'result fail';
+    res.innerHTML = '아직 정확하지 않아요.<br>대칭축까지의 거리가 같은지, 순서가 맞는지 확인해 보세요.<br>(💡 힌트 보기 버튼을 눌러보세요!)';
+  }
+}
+
+function showHint4() {
+  showHintMode4 = !showHintMode4;
+  drawCanvas4();
+}
+function autoComplete4() {
+  userPoints4 = getMirroredPoints4().map(p => [p[0], p[1]]);
+  drawCanvas4();
+  document.getElementById('result4').className = 'result success';
+  document.getElementById('result4').innerHTML = '✨ 자동으로 완성했어요!';
+}
+
+// ============= PANEL 5: 점대칭도형 =============
+const canvas5 = document.getElementById('canvas5');
+let ctx5, w5, h5;
+let shape5Type = 'parallel';
+let rotAngle5 = 0;
+let isAnimating5 = false;
+let panel5Inited = false;
+
+const shape5Defs = {
+  parallel: { pts: [[-100,-50],[80,-50],[100,50],[-80,50]], symmetric: true },
+  rect: { pts: [[-100,-60],[100,-60],[100,60],[-100,60]], symmetric: true },
+  rhombus: { pts: [[0,-80],[80,0],[0,80],[-80,0]], symmetric: true },
+  circle: { pts: (function() { const arr=[]; for (let i=0;i<60;i++){const a=i/60*Math.PI*2; arr.push([80*Math.cos(a), 80*Math.sin(a)]);} return arr; })(), symmetric: true },
+  sshape: { pts: [[-60,-80],[60,-80],[60,-20],[20,-20],[20,20],[60,20],[60,80],[-60,80],[-60,20],[-20,20],[-20,-20],[-60,-20]], symmetric: true },
+  hex: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<6;i++){const a=i*Math.PI/3; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: true },
+  triangle: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<3;i++){const a=-Math.PI/2 + i*2*Math.PI/3; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: false },
+  pentagon: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<5;i++){const a=-Math.PI/2 + i*2*Math.PI/5; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: false }
+};
+
+function initPanel5() {
+  const dim = setupCanvas(canvas5);
+  ctx5 = dim.ctx; w5 = dim.w; h5 = dim.h;
+  if (!panel5Inited) {
+    document.getElementById('rot5').addEventListener('input', e => {
+      rotAngle5 = parseFloat(e.target.value);
+      document.getElementById('rot5Val').textContent = rotAngle5 + '°';
+      drawCanvas5();
+    });
+    panel5Inited = true;
+  }
+  drawCanvas5();
+}
+
+function setShape5() {
+  shape5Type = document.getElementById('shape5').value;
+  rotAngle5 = 0;
+  document.getElementById('rot5').value = 0;
+  document.getElementById('rot5Val').textContent = '0°';
+  document.getElementById('result5').innerHTML = '';
+  drawCanvas5();
+}
+
+function resetRot5() {
+  rotAngle5 = 0;
+  document.getElementById('rot5').value = 0;
+  document.getElementById('rot5Val').textContent = '0°';
+  drawCanvas5();
+}
+
+function rotate180_5() {
+  if (isAnimating5) return;
+  isAnimating5 = true;
+  const start = rotAngle5;
+  const target = start + 180;
+  const duration = 1500;
+  const startTime = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    rotAngle5 = start + (target - start) * t;
+    const display = ((rotAngle5 % 360) + 360) % 360;
+    document.getElementById('rot5').value = display;
+    document.getElementById('rot5Val').textContent = Math.round(display) + '°';
+    drawCanvas5();
+    if (t < 1) {
+      requestAnimationFrame(step);
+    } else {
+      isAnimating5 = false;
+      checkPointSymmetric5();
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+function drawCanvas5() {
+  if (!ctx5) return;
+  ctx5.clearRect(0, 0, w5, h5);
+  drawGrid(ctx5, w5, h5);
+  const cx = w5 / 2, cy = h5 / 2;
+
+  const def = shape5Defs[shape5Type];
+  const orig = def.pts.map(p => ({ x: p[0] + cx, y: p[1] + cy }));
+
+  // 원래 도형 (회색 점선)
+  ctx5.setLineDash([4, 3]);
+  drawShape(ctx5, orig, 'rgba(189, 195, 199, 0.3)', '#7f8c8d', 2);
+  ctx5.setLineDash([]);
+
+  // 회전된 도형
+  const rotated = orig.map(p => rotatePoint(p, cx, cy, rotAngle5));
+  drawShape(ctx5, rotated, 'rgba(155, 89, 182, 0.4)', '#9b59b6', 3);
+
+  // 회전 궤적
+  if (rotAngle5 > 0 && rotAngle5 < 360) {
+    ctx5.strokeStyle = 'rgba(231, 76, 60, 0.25)';
+    ctx5.lineWidth = 1;
+    ctx5.setLineDash([2, 3]);
+    const step = Math.max(1, Math.floor(orig.length / 6));
+    for (let i = 0; i < orig.length; i += step) {
+      const p = orig[i];
+      const r = Math.hypot(p.x - cx, p.y - cy);
+      if (r < 5) continue;
+      const startA = Math.atan2(p.y - cy, p.x - cx);
+      ctx5.beginPath();
+      ctx5.arc(cx, cy, r, startA, startA + rotAngle5 * Math.PI / 180);
+      ctx5.stroke();
+    }
+    ctx5.setLineDash([]);
+  }
+
+  // 대칭의 중심
+  ctx5.fillStyle = '#e74c3c';
+  ctx5.beginPath();
+  ctx5.arc(cx, cy, 7, 0, Math.PI * 2);
+  ctx5.fill();
+  ctx5.strokeStyle = '#fff';
+  ctx5.lineWidth = 2;
+  ctx5.stroke();
+
+  ctx5.fillStyle = '#7f8c8d';
+  ctx5.font = '12px sans-serif';
+  ctx5.fillText('회색 점선: 원래 도형  |  보라색: 회전된 도형  |  빨간 점: 회전 중심', 10, 20);
+}
+
+function checkPointSymmetric5() {
+  const res = document.getElementById('result5');
+  const def = shape5Defs[shape5Type];
+  const ang = ((rotAngle5 % 360) + 360) % 360;
+  if (Math.abs(ang - 180) > 5) {
+    res.className = 'result fail';
+    res.innerHTML = '아직 180°가 아니에요. 회전 슬라이더를 180°에 맞추거나 "180° 돌리기" 버튼을 눌러보세요!';
+    return;
+  }
+  if (def.symmetric) {
+    res.className = 'result success';
+    res.innerHTML = '🎉 정답! 이 도형은 <strong>점대칭도형</strong>입니다.<br>180° 돌렸을 때 원래 도형과 완전히 겹쳐요!';
+  } else {
+    res.className = 'result fail';
+    res.innerHTML = '❌ 이 도형은 <strong>점대칭도형이 아닙니다</strong>.<br>180° 돌렸을 때 원래 도형과 겹치지 않아요.';
+  }
+}
+
+// ============= PANEL 6: 점대칭도형 그리기 =============
+const canvas6 = document.getElementById('canvas6');
+let ctx6, w6, h6;
+const GRID6 = 25;
+let problem6Idx = 0;
+let userPoints6 = [];
+let showHintMode6 = false;
+let panel6Inited = false;
+
+const problems6 = [
+  { name: '깃발', center: [10, 8], given: [[4,4],[4,10],[7,10],[7,8],[10,8]] },
+  { name: '화살', center: [11, 8], given: [[5,4],[8,8],[5,12],[5,9],[11,9]] },
+  { name: '지그재그', center: [12, 8], given: [[4,4],[8,6],[4,8],[8,10],[12,10]] },
+  { name: '갈고리', center: [11, 8], given: [[4,4],[4,11],[9,11],[9,7],[11,7]] }
+];
+
+function initPanel6() {
+  const dim = setupCanvas(canvas6);
+  ctx6 = dim.ctx; w6 = dim.w; h6 = dim.h;
+  if (!panel6Inited) {
+    canvas6.addEventListener('click', onClick6);
+    panel6Inited = true;
+  }
+  loadProblem6();
+}
+
+function loadProblem6() {
+  problem6Idx = parseInt(document.getElementById('problem6').value);
+  userPoints6 = [];
+  showHintMode6 = false;
+  document.getElementById('result6').innerHTML = '';
+  drawCanvas6();
+}
+
+function clearDrawing6() {
+  userPoints6 = [];
+  showHintMode6 = false;
+  document.getElementById('result6').innerHTML = '';
+  drawCanvas6();
+}
+
+function gridToPx6(gx, gy) {
+  return { x: 30 + gx * GRID6, y: 25 + gy * GRID6 };
+}
+function pxToGrid6(px, py) {
+  return { gx: Math.round((px - 30) / GRID6), gy: Math.round((py - 25) / GRID6) };
+}
+
+function drawCanvas6() {
+  if (!ctx6) return;
+  ctx6.clearRect(0, 0, w6, h6);
+  ctx6.strokeStyle = '#dcecf9';
+  ctx6.lineWidth = 1;
+  const gridCols = Math.floor((w6 - 40) / GRID6);
+  const gridRows = Math.floor((h6 - 30) / GRID6);
+  for (let gx = 0; gx <= gridCols; gx++) {
+    const x = 30 + gx * GRID6;
+    ctx6.beginPath(); ctx6.moveTo(x, 25); ctx6.lineTo(x, 25 + gridRows * GRID6); ctx6.stroke();
+  }
+  for (let gy = 0; gy <= gridRows; gy++) {
+    const y = 25 + gy * GRID6;
+    ctx6.beginPath(); ctx6.moveTo(30, y); ctx6.lineTo(30 + gridCols * GRID6, y); ctx6.stroke();
+  }
+  ctx6.fillStyle = '#b0c4d4';
+  for (let gx = 0; gx <= gridCols; gx++) {
+    for (let gy = 0; gy <= gridRows; gy++) {
+      const p = gridToPx6(gx, gy);
+      ctx6.beginPath(); ctx6.arc(p.x, p.y, 1.5, 0, Math.PI * 2); ctx6.fill();
+    }
+  }
+
+  const prob = problems6[problem6Idx];
+  const centerPx = gridToPx6(prob.center[0], prob.center[1]);
+
+  // 주어진 도형
+  const givenPx = prob.given.map(p => gridToPx6(p[0], p[1]));
+  ctx6.strokeStyle = '#2980b9';
+  ctx6.lineWidth = 3;
+  ctx6.beginPath();
+  ctx6.moveTo(givenPx[0].x, givenPx[0].y);
+  for (let i = 1; i < givenPx.length; i++) ctx6.lineTo(givenPx[i].x, givenPx[i].y);
+  ctx6.stroke();
+  givenPx.forEach(p => drawDot(ctx6, p, '#2980b9', 5));
+
+  const correct = getMirroredPoints6();
+
+  if (showHintMode6) {
+    correct.forEach(p => {
+      const pxp = gridToPx6(p[0], p[1]);
+      ctx6.strokeStyle = '#27ae60';
+      ctx6.lineWidth = 2;
+      ctx6.setLineDash([3, 3]);
+      ctx6.beginPath();
+      ctx6.arc(pxp.x, pxp.y, 9, 0, Math.PI * 2);
+      ctx6.stroke();
+      ctx6.setLineDash([]);
+    });
+    // 대응점 연결선 (대칭의 중심 지남)
+    prob.given.forEach((p, i) => {
+      const m = correct[correct.length - 1 - i];
+      const startPx = gridToPx6(p[0], p[1]);
+      const endPx = gridToPx6(m[0], m[1]);
+      ctx6.strokeStyle = 'rgba(39, 174, 96, 0.35)';
+      ctx6.lineWidth = 1;
+      ctx6.setLineDash([2, 4]);
+      ctx6.beginPath();
+      ctx6.moveTo(startPx.x, startPx.y);
+      ctx6.lineTo(endPx.x, endPx.y);
+      ctx6.stroke();
+      ctx6.setLineDash([]);
+    });
+  }
+
+  // 사용자 점과 선
+  if (userPoints6.length >= 1) {
+    ctx6.strokeStyle = '#e67e22';
+    ctx6.lineWidth = 2.5;
+    ctx6.beginPath();
+    const lastGiven = givenPx[givenPx.length - 1];
+    ctx6.moveTo(lastGiven.x, lastGiven.y);
+    userPoints6.forEach(p => {
+      const px = gridToPx6(p[0], p[1]);
+      ctx6.lineTo(px.x, px.y);
+    });
+    if (userPoints6.length === givenPx.length) {
+      ctx6.lineTo(givenPx[0].x, givenPx[0].y);
+    }
+    ctx6.stroke();
+    userPoints6.forEach(p => drawDot(ctx6, gridToPx6(p[0], p[1]), '#e67e22', 6));
+  }
+
+  // 대칭의 중심
+  ctx6.fillStyle = '#e74c3c';
+  ctx6.beginPath();
+  ctx6.arc(centerPx.x, centerPx.y, 7, 0, Math.PI * 2);
+  ctx6.fill();
+  ctx6.strokeStyle = '#fff';
+  ctx6.lineWidth = 2;
+  ctx6.stroke();
+  ctx6.fillStyle = '#c0392b';
+  ctx6.font = 'bold 12px sans-serif';
+  ctx6.fillText('대칭의 중심', centerPx.x + 12, centerPx.y - 8);
+}
+
+function getMirroredPoints6() {
+  const prob = problems6[problem6Idx];
+  const reversed = [];
+  for (let i = prob.given.length - 1; i >= 0; i--) reversed.push(prob.given[i]);
+  return reversed.map(p => [2 * prob.center[0] - p[0], 2 * prob.center[1] - p[1]]);
+}
+
+function onClick6(e) {
+  const pos = getMousePos(canvas6, e);
+  const g = pxToGrid6(pos.x, pos.y);
+  if (g.gx < 0 || g.gy < 0) return;
+  const prob = problems6[problem6Idx];
+  const existingIdx = userPoints6.findIndex(p => p[0] === g.gx && p[1] === g.gy);
+  if (existingIdx >= 0) {
+    userPoints6.splice(existingIdx, 1);
+  } else {
+    if (userPoints6.length >= prob.given.length) {
+      userPoints6.shift();
+    }
+    userPoints6.push([g.gx, g.gy]);
+  }
+  drawCanvas6();
+}
+
+function checkDrawing6() {
+  const correct = getMirroredPoints6();
+  const res = document.getElementById('result6');
+  if (userPoints6.length !== correct.length) {
+    res.className = 'result fail';
+    res.innerHTML = `점이 부족하거나 많아요. (필요: ${correct.length}개, 찍은 점: ${userPoints6.length}개)`;
+    return;
+  }
+  let allMatch = true;
+  for (let i = 0; i < correct.length; i++) {
+    if (userPoints6[i][0] !== correct[i][0] || userPoints6[i][1] !== correct[i][1]) {
+      allMatch = false; break;
+    }
+  }
+  if (allMatch) {
+    res.className = 'result success';
+    res.innerHTML = '🎉 완벽한 점대칭도형이에요!<br>대칭의 중심에서 대응점까지의 거리가 모두 같아요!';
+  } else {
+    res.className = 'result fail';
+    res.innerHTML = '아직 정확하지 않아요.<br>대칭의 중심을 지나고 같은 거리의 반대편에 점을 찍어야 해요.';
+  }
+}
+
+function showHint6() {
+  showHintMode6 = !showHintMode6;
+  drawCanvas6();
+}
+function autoComplete6() {
+  userPoints6 = getMirroredPoints6().map(p => [p[0], p[1]]);
+  drawCanvas6();
+  document.getElementById('result6').className = 'result success';
+  document.getElementById('result6').innerHTML = '✨ 자동으로 완성했어요!';
+}
+
+// ============= 초기화 =============
+window.addEventListener('load', () => {
+  tabSwitch();
+  initPanel1();
+});
+window.addEventListener('resize', () => {
+  panel1Inited = panel2Inited = panel3Inited = panel4Inited = panel5Inited = panel6Inited = false;
+  // 현재 활성 패널만 재초기화
+  const active = document.querySelector('.panel.active');
+  if (!active) return;
+  if (active.id === 'p1') initPanel1();
+  if (active.id === 'p2') initPanel2();
+  if (active.id === 'p3') initPanel3();
+  if (active.id === 'p4') initPanel4();
+  if (active.id === 'p5') initPanel5();
+  if (active.id === 'p6') initPanel6();
+});
+</script>
+</body>
+</html>
