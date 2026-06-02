@@ -1,1677 +1,2091 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>합동과 대칭 학습 앱</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-    background: linear-gradient(135deg, #fdf6e3 0%, #fff8e7 100%);
-    color: #333;
-    min-height: 100vh;
-    padding: 20px;
-  }
-  .container { max-width: 1200px; margin: 0 auto; }
-  header {
-    text-align: center;
-    padding: 20px 0 30px;
-  }
-  header h1 {
-    color: #d35400;
-    font-size: 2.2em;
-    margin-bottom: 8px;
-  }
-  header p { color: #7f8c8d; font-size: 1.05em; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>도형 공방 — 합동과 대칭</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-page: #F5E9CC;
+            --bg-soft: #FFFBF1;
+            --bg-card: #FFFFFF;
+            --ink-1: #2A1F18;
+            --ink-2: #5C4A38;
+            --ink-3: #94816A;
+            --ink-soft: #E3D5BC;
+            --line-soft: #E8D9B6;
 
-  .tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 20px;
-    justify-content: center;
-  }
-  .tab {
-    background: #fff;
-    border: 2px solid #e67e22;
-    color: #d35400;
-    padding: 10px 18px;
-    border-radius: 24px;
-    cursor: pointer;
-    font-size: 0.95em;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-  .tab:hover { background: #fde8d2; }
-  .tab.active {
-    background: #e67e22;
-    color: white;
-    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
-  }
+            --c-cong: #FF7B53;   --c-cong-lt: #FFE0D0;   --c-cong-dp: #BE3D14;
+            --c-line: #1AB89B;   --c-line-lt: #C8F2E8;   --c-line-dp: #006E5C;
+            --c-pt:   #9870E0;   --c-pt-lt:   #EADAFA;   --c-pt-dp:   #5A2EAA;
 
-  .panel {
-    background: white;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    display: none;
-  }
-  .panel.active { display: block; }
+            --hl: #FFE45D;
+            --hl-c: #FFC4A8;
+            --hl-l: #7CE6D2;
+            --hl-p: #C9ADF0;
+            /* 보조 색: 한 문장 안 두 번째/세 번째 개념어용 — 명도 비슷 */
+            --hl-y: #FFE45D;   /* 노랑 */
+            --hl-pk: #FFD0E0;  /* 분홍 */
+            --hl-sk: #BFE3FF;  /* 하늘 */
+            --hl-gn: #D0F2BB;  /* 연두 */
 
-  .panel h2 {
-    color: #d35400;
-    border-bottom: 3px solid #f39c12;
-    padding-bottom: 10px;
-    margin-bottom: 14px;
-    font-size: 1.4em;
-  }
-  .description {
-    background: #fef9e7;
-    border-left: 4px solid #f1c40f;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    border-radius: 6px;
-    line-height: 1.7;
-    font-size: 0.95em;
-  }
-  .description strong { color: #c0392b; }
+            --ok: #1AB89B;       --ok-lt: #C8F2E8;
+            --warn: #E0664B;     --warn-lt: #FCDED4;
 
-  .workspace {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 16px;
-    align-items: start;
-  }
-  @media (max-width: 800px) {
-    .workspace { grid-template-columns: 1fr; }
-  }
+            --fs-xs:   clamp(0.95rem, 0.5vw + 0.8rem, 1.1rem);
+            --fs-sm:   clamp(1.05rem, 0.6vw + 0.85rem, 1.2rem);
+            --fs-base: clamp(1.2rem,  0.9vw + 0.9rem, 1.45rem);
+            --fs-lg:   clamp(1.4rem,  1.4vw + 0.9rem, 1.8rem);
+            --fs-xl:   clamp(1.65rem, 2vw + 0.95rem, 2.2rem);
+            --fs-2xl:  clamp(1.95rem, 2.8vw + 1rem,  2.8rem);
+            --fs-hero: clamp(2.3rem,  3.6vw + 1.1rem, 3.6rem);
 
-  canvas {
-    background: white;
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    display: block;
-    width: 100%;
-    height: auto;
-    touch-action: none;
-    cursor: crosshair;
-  }
+            --gap-sm: clamp(0.65rem, 1vw, 1rem);
+            --gap-md: clamp(1rem, 1.7vw, 1.5rem);
+        }
 
-  .controls {
-    background: #f8f9fa;
-    border-radius: 10px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .controls h3 {
-    font-size: 1em;
-    color: #2c3e50;
-    margin-bottom: 4px;
-  }
-  .btn {
-    background: #3498db;
-    color: white;
-    border: none;
-    padding: 9px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9em;
-    font-weight: 600;
-    transition: all 0.15s;
-  }
-  .btn:hover { background: #2980b9; transform: translateY(-1px); }
-  .btn:active { transform: translateY(0); }
-  .btn.green { background: #27ae60; }
-  .btn.green:hover { background: #229954; }
-  .btn.red { background: #e74c3c; }
-  .btn.red:hover { background: #c0392b; }
-  .btn.purple { background: #9b59b6; }
-  .btn.purple:hover { background: #8e44ad; }
-  .btn.orange { background: #e67e22; }
-  .btn.orange:hover { background: #d35400; }
+        html, body, #root { height: 100%; margin: 0; }
+        body {
+            font-family: 'Gowun Dodum', 'Pretendard', sans-serif;
+            background: radial-gradient(ellipse at top, #3D241A 0%, #2A1810 60%, #1F100A 100%);
+            color: var(--ink-1);
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+        *, *::before, *::after { box-sizing: border-box; }   /* padding/border가 height에 추가되지 않게 */
 
-  .info-box {
-    background: white;
-    border: 2px dashed #bdc3c7;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 0.85em;
-    line-height: 1.6;
-    color: #555;
-  }
-  .info-box .label {
-    color: #d35400;
-    font-weight: 700;
-  }
+        .ff-display { font-family: 'Jua', sans-serif; letter-spacing: -0.01em; }
 
-  .result {
-    margin-top: 8px;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: 600;
-    text-align: center;
-  }
-  .result.success {
-    background: #d4efdf;
-    color: #196f3d;
-    border: 2px solid #27ae60;
-  }
-  .result.fail {
-    background: #fadbd8;
-    color: #922b21;
-    border: 2px solid #e74c3c;
-  }
+        .t-hero { font-size: var(--fs-hero); line-height: 1.1; }
+        .t-2xl  { font-size: var(--fs-2xl);  line-height: 1.15; }
+        .t-xl   { font-size: var(--fs-xl);   line-height: 1.2; }
+        .t-lg   { font-size: var(--fs-lg);   line-height: 1.3; }
+        .t-base { font-size: var(--fs-base); line-height: 1.55; }
+        .t-sm   { font-size: var(--fs-sm);   line-height: 1.45; }
+        .t-xs   { font-size: var(--fs-xs);   line-height: 1.4; }
+        .t-mono { font-variant-numeric: tabular-nums; }
 
-  .slider-group { display: flex; flex-direction: column; gap: 4px; }
-  .slider-group label {
-    font-size: 0.85em;
-    color: #555;
-    display: flex;
-    justify-content: space-between;
-  }
-  input[type=range] { width: 100%; accent-color: #e67e22; }
+        .hl   { background: linear-gradient(180deg, transparent 50%, #FFE45D 50%, #FFE45D 92%, transparent 92%); font-weight: 700; padding: 0 0.15em; white-space: nowrap; }
+        .hl-c { background: linear-gradient(180deg, transparent 50%, var(--hl-c) 50%, var(--hl-c) 92%, transparent 92%); font-weight: 700; padding: 0 0.15em; white-space: nowrap; }
+        .hl-l { background: linear-gradient(180deg, transparent 50%, var(--hl-l) 50%, var(--hl-l) 92%, transparent 92%); font-weight: 700; padding: 0 0.15em; white-space: nowrap; }
+        .hl-p { background: linear-gradient(180deg, transparent 50%, var(--hl-p) 50%, var(--hl-p) 92%, transparent 92%); font-weight: 700; padding: 0 0.15em; white-space: nowrap; }
+        .hl-y  { background: linear-gradient(180deg, transparent 50%, var(--hl-y) 50%, var(--hl-y) 92%, transparent 92%); font-weight: 700; padding: 0 0.15em; white-space: nowrap; }
+        .hl-pk { background: linear-gradient(180deg, transparent 50%, var(--hl-pk) 50%, var(--hl-pk) 92%, transparent 92%); font-weight: 700; padding: 0 0.15em; white-space: nowrap; }
+        .hl-sk { background: linear-gradient(180deg, transparent 50%, var(--hl-sk) 50%, var(--hl-sk) 92%, transparent 92%); font-weight: 700; padding: 0 0.15em; white-space: nowrap; }
+        .hl-gn { background: linear-gradient(180deg, transparent 50%, var(--hl-gn) 50%, var(--hl-gn) 92%, transparent 92%); font-weight: 700; padding: 0 0.15em; white-space: nowrap; }
 
-  select {
-    padding: 8px;
-    border-radius: 6px;
-    border: 2px solid #ddd;
-    font-size: 0.9em;
-    background: white;
-  }
+        .book-frame {
+            height: 100vh;          /* fallback */
+            height: 100svh;         /* 항상 작은 viewport 기준 — 어떤 브라우저에서도 안 잘림 */
+            padding: clamp(6px, 1vh, 18px);
+            padding-right: clamp(82px, 14vw, 140px);  /* 우측 탭 공간 강제 확보 */
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .book {
+            width: 100%; height: 100%;
+            max-width: 1200px;       /* 데스크탑 상한 */
+            max-height: 100%;
+            background: var(--bg-page);
+            border-radius: clamp(20px, 2.5vw, 36px);
+            box-shadow:
+                0 2px 4px rgba(0,0,0,0.15),
+                0 12px 32px rgba(0,0,0,0.35),
+                0 28px 60px -8px rgba(0,0,0,0.4),
+                inset 0 0 0 1px rgba(0,0,0,0.04);
+            overflow: visible;
+            position: relative;
+        }
+        .book::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1.5px solid rgba(180,140,80,0.18);
+            border-radius: clamp(14px, 2vw, 28px);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .book-corner {
+            position: absolute;
+            width: clamp(36px, 5vw, 64px);
+            height: clamp(36px, 5vw, 64px);
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.45;
+        }
+        .book-corner.tl { top: 16px; left: 16px; transform: rotate(-15deg); }
+        .book-corner.br { bottom: 16px; right: 16px; transform: rotate(165deg); }
 
-  .legend {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    font-size: 0.8em;
-    margin-top: 6px;
-  }
-  .legend-item { display: flex; align-items: center; gap: 4px; }
-  .legend-color {
-    width: 14px; height: 14px;
-    border-radius: 3px;
-    border: 1px solid #999;
-  }
+        .page { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; max-height: 100%; overflow: hidden; position: relative; }
+        .page-main { overflow: hidden; display: grid; place-items: stretch; position: relative; min-height: 0; max-height: 100%; }
+        .page-pad { padding: clamp(0.8rem, 2vw, 1.5rem); min-height: 0; }
+        .center-page { height: 100%; display: grid; place-items: center; padding: clamp(1rem, 3vw, 2.5rem); }
 
-  .hint {
-    background: #ebf5fb;
-    border-left: 3px solid #3498db;
-    padding: 8px 12px;
-    font-size: 0.85em;
-    color: #1f618d;
-    border-radius: 4px;
-    margin-top: 8px;
-  }
-</style>
+        .surface {
+            background: var(--bg-card);
+            border: 2px solid var(--line-soft);
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 12px -3px rgba(120,80,30,0.12), 0 1px 3px rgba(120,80,30,0.06);
+        }
+        .surface-soft { background: rgba(255,255,255,0.85); border: 2px solid var(--line-soft); border-radius: 1.25rem; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            border-radius: 9999px; font-weight: 700; letter-spacing: -0.01em;
+            transition: transform .12s, filter .12s, background .12s, box-shadow .12s;
+            cursor: pointer; user-select: none; white-space: nowrap;
+            font-family: 'Jua', sans-serif;
+        }
+        .btn:active:not(:disabled) { transform: translateY(2px); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-primary { color: white; padding: 0.85rem 1.6rem; font-size: var(--fs-base); box-shadow: 0 5px 0 rgba(0,0,0,0.12); }
+        .btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
+        .btn-primary:active:not(:disabled) { box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
+        .btn-ghost { color: var(--ink-2); padding: 0.6rem 1rem; font-size: var(--fs-sm); border-radius: 9999px; }
+        .btn-ghost:hover:not(:disabled) { background: rgba(0,0,0,0.04); }
+        .btn-soft { background: white; color: var(--ink-2); padding: 0.65rem 1.2rem; font-size: var(--fs-sm); border: 2px solid var(--line-soft); border-radius: 9999px; box-shadow: 0 3px 0 rgba(0,0,0,0.05); }
+        .btn-soft:hover:not(:disabled) { border-color: var(--ink-3); }
+        .btn-soft:active:not(:disabled) { box-shadow: 0 1px 0 rgba(0,0,0,0.05); transform: translateY(2px); }
+
+        .badge {
+            background: white; border: 2px solid var(--line-soft);
+            padding: 0.45rem 1rem; border-radius: 9999px;
+            font-family: 'Jua', sans-serif;
+            font-size: var(--fs-sm); color: var(--ink-1);
+            display: inline-flex; align-items: center; gap: 0.4rem;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #FFFEF5, #FFF9E0);
+            border: 3px solid var(--hl);
+            border-radius: 1.5rem;
+            padding: clamp(1rem, 2vw, 1.4rem);
+            box-shadow: 0 6px 0 rgba(255,196,77,0.25), 0 12px 30px -10px rgba(0,0,0,0.08);
+            position: relative;
+        }
+        .insight-card::before {
+            content: '발견 ✨';
+            position: absolute; top: -14px; left: 16px;
+            background: var(--hl); color: #5C4500;
+            font-family: 'Jua', sans-serif; font-size: var(--fs-sm);
+            padding: 0.2rem 0.85rem; border-radius: 9999px;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.1);
+        }
+
+        @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .a-fade { animation: fade-in 0.4s cubic-bezier(0.2, 0.7, 0.3, 1); }
+        @keyframes ring-pulse { 0%,100% { transform: scale(1); opacity: 0.65; } 50% { transform: scale(1.18); opacity: 1; } }
+        .a-ring { transform-box: fill-box; transform-origin: center; animation: ring-pulse 1.4s ease-in-out infinite; }
+        @keyframes draw-stroke { from { stroke-dashoffset: 500; } to { stroke-dashoffset: 0; } }
+        .a-draw { stroke-dasharray: 500; animation: draw-stroke 0.9s ease-out forwards; }
+
+        .lift { transition: transform .2s, box-shadow .2s; }
+        .lift:hover { transform: translateY(-4px); box-shadow: 0 16px 30px -12px rgba(0,0,0,0.18); }
+
+        select.refined {
+            appearance: none; -webkit-appearance: none;
+            background: white; border: 2px solid var(--line-soft);
+            padding: 0.95rem 2.5rem 0.95rem 1.1rem;
+            border-radius: 1rem;
+            font-family: 'Gowun Dodum', sans-serif;
+            font-size: var(--fs-base); font-weight: 700; color: var(--ink-1);
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%235C4A38' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+            background-repeat: no-repeat; background-position: right 1rem center;
+        }
+        select.refined:focus { outline: none; border-color: var(--ink-2); }
+
+        /* 우측 인덱스 탭 — 책 페이지 가장자리에서 바깥쪽으로 튀어나옴 */
+        .index-tabs {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translate(100%, -50%);     /* 책 바깥 우측으로 */
+            display: flex;
+            flex-direction: column;
+            gap: clamp(3px, 0.5vh, 6px);
+            z-index: 50;
+        }
+        .index-tab {
+            font-family: 'Jua', sans-serif;
+            display: flex; align-items: center; gap: clamp(0.5rem, 0.9vw, 0.7rem);
+            padding: clamp(0.7rem, 1.3vw, 1rem) clamp(0.8rem, 1.5vw, 1.1rem) clamp(0.7rem, 1.3vw, 1rem) clamp(0.9rem, 1.6vw, 1.3rem);
+            background: white;
+            border: 2.5px solid var(--tab-c, var(--ink-3));
+            border-left: 6px solid var(--tab-c, var(--ink-3));
+            border-radius: 0 16px 16px 0;
+            color: var(--ink-2);
+            cursor: pointer;
+            font-size: clamp(1rem, 1.15vw, 1.2rem);
+            font-weight: 700;
+            box-shadow: 4px 5px 12px rgba(0,0,0,0.18);
+            transition: transform 0.18s, background 0.18s;
+            text-align: left;
+            white-space: nowrap;
+            margin-left: -2px;
+        }
+        .index-tab .tab-no {
+            font-weight: 800;
+            color: var(--tab-c);
+            min-width: 1.4em;
+            text-align: center;
+            font-size: clamp(1.1rem, 1.3vw, 1.35rem);
+        }
+        .index-tab:hover:not(.active) { transform: translateX(3px); }
+        .index-tab.active {
+            background: var(--tab-c);
+            color: white;
+            transform: translateX(6px);
+            box-shadow: 5px 5px 14px rgba(0,0,0,0.25);
+        }
+        .index-tab.active .tab-no { color: white; }
+        .index-tab.done { color: var(--tab-c); }
+        .index-tab.done .tab-no { color: var(--tab-c); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        button:focus-visible, select:focus-visible { outline: 2px solid var(--ink-2); outline-offset: 2px; }
+        svg { display: block; user-select: none; }
+        svg text { font-family: 'Jua', sans-serif; user-select: none; }
+    </style>
 </head>
+
 <body>
-<div class="container">
-  <header>
-    <h1>🔷 합동과 대칭 학습 앱 🔶</h1>
-    <p>도형을 직접 움직이고, 돌리고, 그려보며 합동과 대칭의 개념을 익혀봅시다</p>
-  </header>
-
-  <div class="tabs">
-    <button class="tab active" data-panel="p1">1. 합동 알아보기</button>
-    <button class="tab" data-panel="p2">2. 합동인 도형의 성질</button>
-    <button class="tab" data-panel="p3">3. 선대칭도형 알아보기</button>
-    <button class="tab" data-panel="p4">4. 선대칭도형 그리기</button>
-    <button class="tab" data-panel="p5">5. 점대칭도형 알아보기</button>
-    <button class="tab" data-panel="p6">6. 점대칭도형 그리기</button>
-  </div>
-
-  <!-- PANEL 1: 합동 알아보기 -->
-  <div class="panel active" id="p1">
-    <h2>1. 합동 알아보기 — 두 도형을 겹쳐 봅시다</h2>
-    <div class="description">
-      <strong>합동</strong>: 모양과 크기가 같아서 포개었을 때 <strong>완전히 겹치는</strong> 두 도형.
-      아래 파란 도형을 드래그하여 옮기고, 슬라이더로 회전시켜서 빨간 도형과 완전히 겹쳐 보세요!
-    </div>
-    <div class="workspace">
-      <canvas id="canvas1" width="640" height="480"></canvas>
-      <div class="controls">
-        <h3>🎮 조작</h3>
-        <div class="slider-group">
-          <label>회전 각도 <span id="rot1Val">0°</span></label>
-          <input type="range" id="rot1" min="0" max="360" value="0">
-        </div>
-        <button class="btn green" onclick="checkCongruent1()">✓ 합동인지 확인</button>
-        <button class="btn orange" onclick="newShape1()">🎲 새로운 도형</button>
-        <button class="btn red" onclick="resetShape1()">↺ 처음 위치로</button>
-        <div id="result1"></div>
-        <div class="info-box">
-          <span class="label">💡 도움말</span><br>
-          파란 도형을 마우스로 끌어서 빨간 도형 위로 옮기고, 슬라이더로 회전시키세요.
-          완전히 겹치면 <strong>합동</strong>입니다.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PANEL 2: 합동인 도형의 성질 -->
-  <div class="panel" id="p2">
-    <h2>2. 합동인 도형의 성질 — 대응점·대응변·대응각</h2>
-    <div class="description">
-      합동인 두 도형에서 포개었을 때 겹치는 <strong>점, 변, 각</strong>을 각각
-      <strong>대응점, 대응변, 대응각</strong>이라 합니다.
-      도형의 점·변·각을 클릭해 보세요. 짝이 되는 부분이 표시됩니다!
-    </div>
-    <div class="workspace">
-      <canvas id="canvas2" width="640" height="480"></canvas>
-      <div class="controls">
-        <h3>👆 클릭해서 확인</h3>
-        <select id="mode2">
-          <option value="point">대응점 찾기</option>
-          <option value="side">대응변 찾기</option>
-          <option value="angle">대응각 찾기</option>
-        </select>
-        <button class="btn orange" onclick="newShape2()">🎲 새로운 도형</button>
-        <button class="btn red" onclick="clearSelection2()">지우기</button>
-        <div class="info-box" id="info2">
-          <span class="label">선택 정보</span><br>
-          점/변/각을 클릭하면 대응되는 부분이 같은 색으로 표시됩니다.
-        </div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-color" style="background:#e74c3c"></div>점</div>
-          <div class="legend-item"><div class="legend-color" style="background:#27ae60"></div>변</div>
-          <div class="legend-item"><div class="legend-color" style="background:#9b59b6"></div>각</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PANEL 3: 선대칭도형 알아보기 -->
-  <div class="panel" id="p3">
-    <h2>3. 선대칭도형 알아보기 — 접어 봅시다</h2>
-    <div class="description">
-      한 직선을 따라 접었을 때 완전히 겹치는 도형을 <strong>선대칭도형</strong>,
-      그 직선을 <strong>대칭축</strong>이라 합니다.
-      도형을 골라 <strong>접기 슬라이더</strong>로 접어 보고, 대칭축 각도를 바꿔 보세요!
-    </div>
-    <div class="workspace">
-      <canvas id="canvas3" width="640" height="480"></canvas>
-      <div class="controls">
-        <h3>📐 도형 선택</h3>
-        <select id="shape3" onchange="setShape3()">
-          <option value="rect">직사각형</option>
-          <option value="rhombus">마름모</option>
-          <option value="circle">원</option>
-          <option value="triangle">정삼각형</option>
-          <option value="iso">이등변삼각형</option>
-          <option value="hex">정육각형</option>
-          <option value="heart">하트</option>
-          <option value="scalene">일반 삼각형 (대칭X)</option>
-        </select>
-        <div class="slider-group">
-          <label>접기 <span id="fold3Val">0%</span></label>
-          <input type="range" id="fold3" min="0" max="100" value="0">
-        </div>
-        <div class="slider-group">
-          <label>대칭축 각도 <span id="axis3Val">90°</span></label>
-          <input type="range" id="axis3" min="0" max="180" value="90">
-        </div>
-        <button class="btn green" onclick="checkSymmetric3()">✓ 선대칭인지 확인</button>
-        <button class="btn purple" onclick="showAllAxes3()">↔️ 모든 대칭축 보기</button>
-        <button class="btn red" onclick="resetFold3()">↺ 초기화</button>
-        <div id="result3"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PANEL 4: 선대칭도형 그리기 -->
-  <div class="panel" id="p4">
-    <h2>4. 선대칭도형 그리기 — 직접 완성해 봅시다</h2>
-    <div class="description">
-      모눈종이 위에서 도형의 반쪽이 주어졌습니다. <strong>대칭축</strong>을 기준으로
-      <strong>대응점</strong>을 찍어 선대칭도형을 완성해 보세요.<br>
-      💡 대응점은 <strong>대칭축에서 수직</strong>이고 <strong>거리가 같은</strong> 곳에 있습니다!
-    </div>
-    <div class="workspace">
-      <canvas id="canvas4" width="640" height="480"></canvas>
-      <div class="controls">
-        <h3>✏️ 그리기 도구</h3>
-        <select id="problem4" onchange="loadProblem4()">
-          <option value="0">문제 1 — 사다리꼴</option>
-          <option value="1">문제 2 — 화살표</option>
-          <option value="2">문제 3 — 별 모양</option>
-          <option value="3">문제 4 — 집 모양</option>
-        </select>
-        <button class="btn green" onclick="checkDrawing4()">✓ 정답 확인</button>
-        <button class="btn purple" onclick="showHint4()">💡 힌트 보기</button>
-        <button class="btn orange" onclick="autoComplete4()">✨ 자동 완성</button>
-        <button class="btn red" onclick="clearDrawing4()">🗑 내가 찍은 점 지우기</button>
-        <div id="result4"></div>
-        <div class="info-box">
-          <span class="label">사용 방법</span><br>
-          모눈종이 위 격자점을 클릭해서 대응점을 찍으세요.
-          점을 모두 찍으면 자동으로 선이 연결됩니다.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PANEL 5: 점대칭도형 알아보기 -->
-  <div class="panel" id="p5">
-    <h2>5. 점대칭도형 알아보기 — 180° 돌려 봅시다</h2>
-    <div class="description">
-      한 도형을 어떤 점을 중심으로 <strong>180° 돌렸을 때</strong> 처음 도형과 완전히 겹치는 도형을
-      <strong>점대칭도형</strong>이라 하고, 그 점을 <strong>대칭의 중심</strong>이라 합니다.
-      슬라이더로 도형을 돌려서 확인해 보세요!
-    </div>
-    <div class="workspace">
-      <canvas id="canvas5" width="640" height="480"></canvas>
-      <div class="controls">
-        <h3>🔄 회전시키기</h3>
-        <select id="shape5" onchange="setShape5()">
-          <option value="parallel">평행사변형</option>
-          <option value="rect">직사각형</option>
-          <option value="rhombus">마름모</option>
-          <option value="circle">원</option>
-          <option value="sshape">S 모양</option>
-          <option value="hex">정육각형</option>
-          <option value="triangle">정삼각형 (대칭X)</option>
-          <option value="pentagon">정오각형 (대칭X)</option>
-        </select>
-        <div class="slider-group">
-          <label>회전 각도 <span id="rot5Val">0°</span></label>
-          <input type="range" id="rot5" min="0" max="360" value="0">
-        </div>
-        <button class="btn green" onclick="checkPointSymmetric5()">✓ 점대칭인지 확인</button>
-        <button class="btn purple" onclick="rotate180_5()">⤵ 180° 돌리기</button>
-        <button class="btn red" onclick="resetRot5()">↺ 초기화</button>
-        <div id="result5"></div>
-        <div class="hint">
-          🎯 180° 돌렸을 때 원래 도형과 완전히 겹치면 점대칭도형!
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PANEL 6: 점대칭도형 그리기 -->
-  <div class="panel" id="p6">
-    <h2>6. 점대칭도형 그리기 — 대칭의 중심을 이용하여</h2>
-    <div class="description">
-      모눈종이 위에 도형의 절반과 <strong>대칭의 중심(빨간 점)</strong>이 주어졌습니다.
-      대칭의 중심을 지나도록 각 점에서 <strong>같은 거리</strong>의 반대편에 대응점을 찍어
-      점대칭도형을 완성해 보세요!
-    </div>
-    <div class="workspace">
-      <canvas id="canvas6" width="640" height="480"></canvas>
-      <div class="controls">
-        <h3>✏️ 그리기 도구</h3>
-        <select id="problem6" onchange="loadProblem6()">
-          <option value="0">문제 1 — 깃발</option>
-          <option value="1">문제 2 — 화살</option>
-          <option value="2">문제 3 — 지그재그</option>
-          <option value="3">문제 4 — 갈고리</option>
-        </select>
-        <button class="btn green" onclick="checkDrawing6()">✓ 정답 확인</button>
-        <button class="btn purple" onclick="showHint6()">💡 힌트 보기</button>
-        <button class="btn orange" onclick="autoComplete6()">✨ 자동 완성</button>
-        <button class="btn red" onclick="clearDrawing6()">🗑 내가 찍은 점 지우기</button>
-        <div id="result6"></div>
-        <div class="info-box">
-          <span class="label">사용 방법</span><br>
-          빨간 점이 대칭의 중심입니다. 주어진 점에서 대칭의 중심을 지나
-          <strong>같은 거리</strong>만큼 반대쪽에 점을 찍으세요.
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// ============= 공통 유틸 =============
-function setupCanvas(canvas) {
-  const ratio = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * ratio;
-  canvas.height = rect.height * ratio;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(ratio, ratio);
-  return { ctx, w: rect.width, h: rect.height };
-}
-
-function getMousePos(canvas, e) {
-  const rect = canvas.getBoundingClientRect();
-  const cx = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-  const cy = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-  return { x: cx - rect.left, y: cy - rect.top };
-}
-
-function drawGrid(ctx, w, h, gridSize) {
-  if (!gridSize) gridSize = 20;
-  ctx.strokeStyle = '#e8eef5';
-  ctx.lineWidth = 1;
-  for (let x = 0; x <= w; x += gridSize) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-  }
-  for (let y = 0; y <= h; y += gridSize) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-  }
-}
-
-function rotatePoint(p, cx, cy, angleDeg) {
-  const rad = angleDeg * Math.PI / 180;
-  const cos = Math.cos(rad), sin = Math.sin(rad);
-  return {
-    x: cos * (p.x - cx) - sin * (p.y - cy) + cx,
-    y: sin * (p.x - cx) + cos * (p.y - cy) + cy
-  };
-}
-
-function drawShape(ctx, pts, fill, stroke, lineWidth) {
-  if (!lineWidth) lineWidth = 2.5;
-  if (pts.length === 0) return;
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-  ctx.closePath();
-  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
-  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lineWidth; ctx.stroke(); }
-}
-
-function drawDot(ctx, p, color, r) {
-  if (!r) r = 4;
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function tabSwitch() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(tab.dataset.panel).classList.add('active');
-      // 캔버스 다시 그리기 - 패널 보여진 후 init 호출
-      const pid = tab.dataset.panel;
-      setTimeout(() => {
-        if (pid === 'p1') initPanel1();
-        if (pid === 'p2') initPanel2();
-        if (pid === 'p3') initPanel3();
-        if (pid === 'p4') initPanel4();
-        if (pid === 'p5') initPanel5();
-        if (pid === 'p6') initPanel6();
-      }, 10);
-    };
-  });
-}
-
-// ============= PANEL 1: 합동 =============
-const canvas1 = document.getElementById('canvas1');
-let ctx1, w1, h1;
-let shape1Red, shape1Blue, blueTransform;
-let dragging1 = false, dragOffset1 = {x:0, y:0};
-let panel1Inited = false;
-
-function genRandomShape() {
-  const cx = 0, cy = 0;
-  const n = 3 + Math.floor(Math.random() * 3);
-  const points = [];
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
-    const r = 50 + Math.random() * 40;
-    points.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
-  }
-  return points;
-}
-
-function initPanel1() {
-  const dim = setupCanvas(canvas1);
-  ctx1 = dim.ctx; w1 = dim.w; h1 = dim.h;
-  if (!panel1Inited) {
-    newShape1();
-    canvas1.addEventListener('mousedown', startDrag1);
-    canvas1.addEventListener('mousemove', drag1);
-    canvas1.addEventListener('mouseup', endDrag1);
-    canvas1.addEventListener('mouseleave', endDrag1);
-    canvas1.addEventListener('touchstart', startDrag1, { passive: false });
-    canvas1.addEventListener('touchmove', drag1, { passive: false });
-    canvas1.addEventListener('touchend', endDrag1);
-    document.getElementById('rot1').addEventListener('input', e => {
-      blueTransform.rot = parseFloat(e.target.value);
-      document.getElementById('rot1Val').textContent = blueTransform.rot + '°';
-      drawCanvas1();
-    });
-    panel1Inited = true;
-  } else {
-    drawCanvas1();
-  }
-}
-
-function newShape1() {
-  shape1Red = genRandomShape();
-  if (Math.random() < 0.6) {
-    shape1Blue = shape1Red.map(p => ({ ...p }));
-  } else {
-    shape1Blue = genRandomShape();
-  }
-  blueTransform = { x: 450, y: 240, rot: 0 };
-  document.getElementById('rot1').value = 0;
-  document.getElementById('rot1Val').textContent = '0°';
-  document.getElementById('result1').innerHTML = '';
-  drawCanvas1();
-}
-
-function resetShape1() {
-  blueTransform = { x: 450, y: 240, rot: 0 };
-  document.getElementById('rot1').value = 0;
-  document.getElementById('rot1Val').textContent = '0°';
-  document.getElementById('result1').innerHTML = '';
-  drawCanvas1();
-}
-
-function getTransformedBlue() {
-  return shape1Blue.map(p => {
-    const r = rotatePoint(p, 0, 0, blueTransform.rot);
-    return { x: r.x + blueTransform.x, y: r.y + blueTransform.y };
-  });
-}
-
-function drawCanvas1() {
-  if (!ctx1) return;
-  ctx1.clearRect(0, 0, w1, h1);
-  drawGrid(ctx1, w1, h1);
-  const redShifted = shape1Red.map(p => ({ x: p.x + 180, y: p.y + 240 }));
-  drawShape(ctx1, redShifted, 'rgba(231, 76, 60, 0.5)', '#c0392b', 3);
-  const blue = getTransformedBlue();
-  drawShape(ctx1, blue, 'rgba(52, 152, 219, 0.6)', '#2980b9', 3);
-  ctx1.fillStyle = '#333';
-  ctx1.font = 'bold 14px sans-serif';
-  ctx1.fillText('빨간 도형 (고정)', 110, 30);
-  ctx1.fillText('파란 도형 (드래그/회전 가능)', 380, 30);
-}
-
-function pointInPolygon(p, poly) {
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const xi = poly[i].x, yi = poly[i].y;
-    const xj = poly[j].x, yj = poly[j].y;
-    const intersect = ((yi > p.y) !== (yj > p.y)) &&
-      (p.x < (xj - xi) * (p.y - yi) / (yj - yi) + xi);
-    if (intersect) inside = !inside;
-  }
-  return inside;
-}
-
-function startDrag1(e) {
-  e.preventDefault();
-  const pos = getMousePos(canvas1, e);
-  const blue = getTransformedBlue();
-  if (pointInPolygon(pos, blue)) {
-    dragging1 = true;
-    dragOffset1 = { x: pos.x - blueTransform.x, y: pos.y - blueTransform.y };
-  }
-}
-function drag1(e) {
-  if (!dragging1) return;
-  e.preventDefault();
-  const pos = getMousePos(canvas1, e);
-  blueTransform.x = pos.x - dragOffset1.x;
-  blueTransform.y = pos.y - dragOffset1.y;
-  drawCanvas1();
-}
-function endDrag1() { dragging1 = false; }
-
-function checkCongruent1() {
-  function edgeLengths(pts) {
-    const arr = [];
-    for (let i = 0; i < pts.length; i++) {
-      const j = (i + 1) % pts.length;
-      arr.push(Math.hypot(pts[j].x - pts[i].x, pts[j].y - pts[i].y));
-    }
-    return arr.sort((a, b) => a - b);
-  }
-  const e1 = edgeLengths(shape1Red);
-  const e2 = edgeLengths(shape1Blue);
-  let isCongruentShape = e1.length === e2.length;
-  if (isCongruentShape) {
-    for (let i = 0; i < e1.length; i++) {
-      if (Math.abs(e1[i] - e2[i]) > 0.5) isCongruentShape = false;
-    }
-  }
-
-  const blue = getTransformedBlue();
-  const redShifted = shape1Red.map(p => ({ x: p.x + 180, y: p.y + 240 }));
-
-  let overlap = false;
-  if (isCongruentShape) {
-    const n = redShifted.length;
-    for (let offset = 0; offset < n; offset++) {
-      let allMatch = true;
-      for (let i = 0; i < n; i++) {
-        const r = redShifted[i];
-        const b = blue[(i + offset) % n];
-        if (Math.hypot(r.x - b.x, r.y - b.y) > 18) { allMatch = false; break; }
-      }
-      if (allMatch) { overlap = true; break; }
-    }
-  }
-
-  const res = document.getElementById('result1');
-  if (isCongruentShape && overlap) {
-    res.className = 'result success';
-    res.innerHTML = '🎉 완벽! 두 도형은 <strong>합동</strong>입니다.<br>완전히 겹쳐졌어요!';
-  } else if (isCongruentShape && !overlap) {
-    res.className = 'result fail';
-    res.innerHTML = '두 도형은 <strong>합동</strong>이지만 아직 겹쳐지지 않았어요.<br>더 정확히 옮기고 돌려보세요!';
-  } else {
-    res.className = 'result fail';
-    res.innerHTML = '두 도형은 <strong>합동이 아닙니다</strong>.<br>모양과 크기가 달라요. 새로운 도형으로 시도해 보세요!';
-  }
-}
-
-// ============= PANEL 2: 합동인 도형의 성질 =============
-const canvas2 = document.getElementById('canvas2');
-let ctx2, w2, h2;
-let shape2A, shape2B;
-let selected2 = null;
-let permutation2;
-let panel2Inited = false;
-
-function initPanel2() {
-  const dim = setupCanvas(canvas2);
-  ctx2 = dim.ctx; w2 = dim.w; h2 = dim.h;
-  if (!panel2Inited) {
-    newShape2();
-    canvas2.addEventListener('click', onClick2);
-    panel2Inited = true;
-  } else {
-    drawCanvas2();
-  }
-}
-
-function newShape2() {
-  const base = genRandomShape();
-  shape2A = base.map(p => ({ x: p.x + 180, y: p.y + 240 }));
-  const flip = Math.random() < 0.4 ? -1 : 1;
-  const rot = Math.random() * 360;
-  const rotated = base.map(p => {
-    const flipped = { x: p.x * flip, y: p.y };
-    return rotatePoint(flipped, 0, 0, rot);
-  });
-  const offset = Math.floor(Math.random() * rotated.length);
-  let reordered = [];
-  for (let i = 0; i < rotated.length; i++) {
-    reordered.push(rotated[(i + offset) % rotated.length]);
-  }
-  if (flip === -1) reordered.reverse();
-  shape2B = reordered.map(p => ({ x: p.x + 460, y: p.y + 240 }));
-
-  permutation2 = [];
-  for (let i = 0; i < base.length; i++) {
-    let bIdx;
-    if (flip === -1) {
-      bIdx = (rotated.length - 1) - ((i - offset + rotated.length) % rotated.length);
-    } else {
-      bIdx = (i - offset + rotated.length) % rotated.length;
-    }
-    permutation2.push(bIdx);
-  }
-  selected2 = null;
-  drawCanvas2();
-  updateInfo2('');
-}
-
-function clearSelection2() {
-  selected2 = null;
-  drawCanvas2();
-  updateInfo2('');
-}
-
-function drawCanvas2() {
-  if (!ctx2) return;
-  ctx2.clearRect(0, 0, w2, h2);
-  drawGrid(ctx2, w2, h2);
-
-  drawShape(ctx2, shape2A, 'rgba(241, 196, 15, 0.3)', '#f39c12', 2.5);
-  drawShape(ctx2, shape2B, 'rgba(52, 152, 219, 0.3)', '#2980b9', 2.5);
-
-  const labels = '가나다라마바'.split('');
-  shape2A.forEach((p, i) => {
-    ctx2.fillStyle = '#7f8c8d';
-    ctx2.font = 'bold 13px sans-serif';
-    ctx2.fillText(labels[i], p.x - 5, p.y - 8);
-  });
-  const labelsB = 'ㄱㄴㄷㄹㅁㅂ'.split('');
-  shape2B.forEach((p, i) => {
-    ctx2.fillStyle = '#7f8c8d';
-    ctx2.font = 'bold 13px sans-serif';
-    ctx2.fillText(labelsB[i], p.x - 5, p.y - 8);
-  });
-
-  if (selected2) {
-    const { type, shape, idx } = selected2;
-    const ptsA = shape2A, ptsB = shape2B;
-    const aIdx = shape === 'A' ? idx : permutation2.indexOf(idx);
-    const bIdx = shape === 'B' ? idx : permutation2[idx];
-
-    if (type === 'point') {
-      highlightPoint(ptsA[aIdx], '#e74c3c');
-      highlightPoint(ptsB[bIdx], '#e74c3c');
-      updateInfo2(`<span class="label">대응점</span>: 점 ${labels[aIdx]} ↔ 점 ${labelsB[bIdx]}`);
-    } else if (type === 'side') {
-      const aN = ptsA.length;
-      const aNext = (aIdx + 1) % aN;
-      const bIdx1 = permutation2[aIdx];
-      const bIdx2 = permutation2[aNext];
-      highlightSide(ptsA[aIdx], ptsA[aNext], '#27ae60');
-      highlightSide(ptsB[bIdx1], ptsB[bIdx2], '#27ae60');
-      const lenA = Math.hypot(ptsA[aNext].x - ptsA[aIdx].x, ptsA[aNext].y - ptsA[aIdx].y);
-      const lenB = Math.hypot(ptsB[bIdx2].x - ptsB[bIdx1].x, ptsB[bIdx2].y - ptsB[bIdx1].y);
-      updateInfo2(`<span class="label">대응변</span>: 변 ${labels[aIdx]}${labels[aNext]} ↔ 변 ${labelsB[bIdx1]}${labelsB[bIdx2]}<br>길이: ${lenA.toFixed(1)} ≒ ${lenB.toFixed(1)} ✓`);
-    } else if (type === 'angle') {
-      const bIdxV = permutation2[aIdx];
-      highlightAngle(ctx2, ptsA, aIdx, '#9b59b6');
-      highlightAngle(ctx2, ptsB, bIdxV, '#9b59b6');
-      const angA = computeAngle(ptsA, aIdx);
-      const angB = computeAngle(ptsB, bIdxV);
-      updateInfo2(`<span class="label">대응각</span>: 각 ${labels[aIdx]} ↔ 각 ${labelsB[bIdxV]}<br>크기: ${angA.toFixed(0)}° ≒ ${angB.toFixed(0)}° ✓`);
-    }
-  }
-
-  shape2A.forEach(p => drawDot(ctx2, p, '#34495e', 4));
-  shape2B.forEach(p => drawDot(ctx2, p, '#34495e', 4));
-}
-
-function highlightPoint(p, color) {
-  ctx2.fillStyle = color;
-  ctx2.beginPath();
-  ctx2.arc(p.x, p.y, 10, 0, Math.PI * 2);
-  ctx2.fill();
-}
-function highlightSide(p1, p2, color) {
-  ctx2.strokeStyle = color;
-  ctx2.lineWidth = 6;
-  ctx2.beginPath();
-  ctx2.moveTo(p1.x, p1.y);
-  ctx2.lineTo(p2.x, p2.y);
-  ctx2.stroke();
-}
-function highlightAngle(ctx, pts, idx, color) {
-  const n = pts.length;
-  const p = pts[idx];
-  const prev = pts[(idx - 1 + n) % n];
-  const next = pts[(idx + 1) % n];
-  const a1 = Math.atan2(prev.y - p.y, prev.x - p.x);
-  const a2 = Math.atan2(next.y - p.y, next.x - p.x);
-  ctx.fillStyle = color + '55';
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(p.x, p.y);
-  // 작은 각 방향으로 호 그리기
-  let diff = a2 - a1;
-  while (diff > Math.PI) diff -= Math.PI * 2;
-  while (diff < -Math.PI) diff += Math.PI * 2;
-  ctx.arc(p.x, p.y, 25, a1, a1 + diff, diff < 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-}
-function computeAngle(pts, idx) {
-  const n = pts.length;
-  const p = pts[idx];
-  const prev = pts[(idx - 1 + n) % n];
-  const next = pts[(idx + 1) % n];
-  const v1 = { x: prev.x - p.x, y: prev.y - p.y };
-  const v2 = { x: next.x - p.x, y: next.y - p.y };
-  const dot = v1.x * v2.x + v1.y * v2.y;
-  const m1 = Math.hypot(v1.x, v1.y);
-  const m2 = Math.hypot(v2.x, v2.y);
-  return Math.acos(Math.max(-1, Math.min(1, dot / (m1 * m2)))) * 180 / Math.PI;
-}
-
-function onClick2(e) {
-  const pos = getMousePos(canvas2, e);
-  const mode = document.getElementById('mode2').value;
-  for (const item of [['A', shape2A], ['B', shape2B]]) {
-    const shape = item[0], pts = item[1];
-    if (mode === 'point') {
-      for (let i = 0; i < pts.length; i++) {
-        if (Math.hypot(pts[i].x - pos.x, pts[i].y - pos.y) < 15) {
-          selected2 = { type: 'point', shape, idx: i };
-          drawCanvas2();
-          return;
-        }
-      }
-    } else if (mode === 'side') {
-      for (let i = 0; i < pts.length; i++) {
-        const j = (i + 1) % pts.length;
-        if (distToSegment(pos, pts[i], pts[j]) < 10) {
-          selected2 = { type: 'side', shape, idx: i };
-          drawCanvas2();
-          return;
-        }
-      }
-    } else if (mode === 'angle') {
-      for (let i = 0; i < pts.length; i++) {
-        if (Math.hypot(pts[i].x - pos.x, pts[i].y - pos.y) < 30) {
-          selected2 = { type: 'angle', shape, idx: i };
-          drawCanvas2();
-          return;
-        }
-      }
-    }
-  }
-}
-
-function distToSegment(p, a, b) {
-  const dx = b.x - a.x, dy = b.y - a.y;
-  const len2 = dx * dx + dy * dy;
-  if (len2 === 0) return Math.hypot(p.x - a.x, p.y - a.y);
-  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2;
-  t = Math.max(0, Math.min(1, t));
-  const px = a.x + t * dx, py = a.y + t * dy;
-  return Math.hypot(px - p.x, py - p.y);
-}
-
-function updateInfo2(html) {
-  document.getElementById('info2').innerHTML = html ||
-    '<span class="label">선택 정보</span><br>점/변/각을 클릭하면 대응되는 부분이 같은 색으로 표시됩니다.';
-}
-
-// ============= PANEL 3: 선대칭도형 =============
-const canvas3 = document.getElementById('canvas3');
-let ctx3, w3, h3;
-let shape3Type = 'rect';
-let foldAmount = 0, axisAngle = 90;
-let showAllAxes = false;
-let panel3Inited = false;
-
-const shape3Defs = {
-  rect: { pts: [[-100,-60],[100,-60],[100,60],[-100,60]], symmetric: true, axes: ['v','h'] },
-  rhombus: { pts: [[0,-80],[80,0],[0,80],[-80,0]], symmetric: true, axes: ['v','h'] },
-  circle: { pts: 'circle', symmetric: true, axes: 'all' },
-  triangle: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<3;i++){const a=-Math.PI/2 + i*2*Math.PI/3; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: true, axesNum: 3 },
-  iso: { pts: [[0,-80],[70,60],[-70,60]], symmetric: true, axes: ['v'] },
-  hex: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<6;i++){const a=i*Math.PI/3; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: true, axesNum: 6 },
-  heart: { pts: (function() {
-    const arr = [];
-    for (let t = 0; t < Math.PI * 2; t += 0.1) {
-      const x = 5 * (16 * Math.pow(Math.sin(t), 3));
-      const y = -5 * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-      arr.push([x, y]);
-    }
-    return arr;
-  })(), symmetric: true, axes: ['v'] },
-  scalene: { pts: [[-80,-50],[80,-20],[20,80]], symmetric: false, axes: [] }
-};
-
-function initPanel3() {
-  const dim = setupCanvas(canvas3);
-  ctx3 = dim.ctx; w3 = dim.w; h3 = dim.h;
-  if (!panel3Inited) {
-    document.getElementById('fold3').addEventListener('input', e => {
-      foldAmount = parseFloat(e.target.value);
-      document.getElementById('fold3Val').textContent = foldAmount + '%';
-      drawCanvas3();
-    });
-    document.getElementById('axis3').addEventListener('input', e => {
-      axisAngle = parseFloat(e.target.value);
-      document.getElementById('axis3Val').textContent = axisAngle + '°';
-      drawCanvas3();
-    });
-    panel3Inited = true;
-  }
-  drawCanvas3();
-}
-
-function setShape3() {
-  shape3Type = document.getElementById('shape3').value;
-  showAllAxes = false;
-  document.getElementById('result3').innerHTML = '';
-  drawCanvas3();
-}
-
-function resetFold3() {
-  foldAmount = 0;
-  document.getElementById('fold3').value = 0;
-  document.getElementById('fold3Val').textContent = '0%';
-  showAllAxes = false;
-  drawCanvas3();
-}
-
-function getShape3Pts() {
-  const def = shape3Defs[shape3Type];
-  if (def.pts === 'circle') {
-    const arr = [];
-    for (let i = 0; i < 60; i++) {
-      const a = i / 60 * Math.PI * 2;
-      arr.push([80 * Math.cos(a), 80 * Math.sin(a)]);
-    }
-    return arr;
-  }
-  return def.pts;
-}
-
-function reflectAcrossLine(p, linePt, lineDir) {
-  const dx = p.x - linePt.x, dy = p.y - linePt.y;
-  const d = lineDir.x * dx + lineDir.y * dy;
-  const fx = linePt.x + lineDir.x * d;
-  const fy = linePt.y + lineDir.y * d;
-  return { x: 2 * fx - p.x, y: 2 * fy - p.y };
-}
-
-function drawCanvas3() {
-  if (!ctx3) return;
-  ctx3.clearRect(0, 0, w3, h3);
-  drawGrid(ctx3, w3, h3);
-
-  const cx = w3 / 2, cy = h3 / 2;
-  const pts = getShape3Pts().map(p => ({ x: p[0] + cx, y: p[1] + cy }));
-
-  const axisRad = axisAngle * Math.PI / 180;
-  const dx = Math.cos(axisRad), dy = Math.sin(axisRad);
-
-  // 모든 대칭축
-  if (showAllAxes && shape3Defs[shape3Type].symmetric) {
-    ctx3.strokeStyle = 'rgba(155, 89, 182, 0.5)';
-    ctx3.lineWidth = 1.5;
-    ctx3.setLineDash([4, 4]);
-    const def = shape3Defs[shape3Type];
-    const axesToDraw = [];
-    if (def.axes === 'all') {
-      for (let i = 0; i < 12; i++) axesToDraw.push(i * 15);
-    } else if (def.axesNum) {
-      for (let i = 0; i < def.axesNum; i++) axesToDraw.push(i * 180 / def.axesNum + (shape3Type === 'triangle' ? 90 : 0));
-    } else if (def.axes) {
-      def.axes.forEach(a => {
-        if (a === 'v') axesToDraw.push(90);
-        if (a === 'h') axesToDraw.push(0);
-      });
-    }
-    axesToDraw.forEach(deg => {
-      const r = deg * Math.PI / 180;
-      const cd = Math.cos(r), sd = Math.sin(r);
-      ctx3.beginPath();
-      ctx3.moveTo(cx - cd * 300, cy - sd * 300);
-      ctx3.lineTo(cx + cd * 300, cy + sd * 300);
-      ctx3.stroke();
-    });
-    ctx3.setLineDash([]);
-  }
-
-  // 현재 대칭축
-  ctx3.strokeStyle = '#9b59b6';
-  ctx3.lineWidth = 2.5;
-  ctx3.setLineDash([8, 4]);
-  ctx3.beginPath();
-  ctx3.moveTo(cx - dx * 300, cy - dy * 300);
-  ctx3.lineTo(cx + dx * 300, cy + dy * 300);
-  ctx3.stroke();
-  ctx3.setLineDash([]);
-
-  const t = foldAmount / 100;
-
-  // 접히는 쪽(perp > 0)을 보간해서 그리기
-  function foldPoint(p, tt) {
-    const reflected = reflectAcrossLine(p, { x: cx, y: cy }, { x: dx, y: dy });
-    return {
-      x: p.x * (1 - tt) + reflected.x * tt,
-      y: p.y * (1 - tt) + reflected.y * tt
-    };
-  }
-
-  // 원본 도형 (반투명)
-  drawShape(ctx3, pts, 'rgba(52, 152, 219, 0.15)', '#3498db', 2);
-
-  // 접힌 모양 = 윗부분(perp<=0) 그대로 + 아랫부분(perp>0) foldPoint 보간
-  if (t > 0) {
-    const foldedPts = pts.map(p => {
-      const px = p.x - cx, py = p.y - cy;
-      const perp = -dy * px + dx * py;
-      if (perp > 0) return foldPoint(p, t);
-      return { x: p.x, y: p.y };
-    });
-    drawShape(ctx3, foldedPts, `rgba(231, 76, 60, ${0.2 + t * 0.4})`, '#e74c3c', 2);
-  }
-
-  // 라벨
-  ctx3.fillStyle = '#7f8c8d';
-  ctx3.font = '12px sans-serif';
-  ctx3.fillText('파란색: 원래 도형  |  빨간색: 접은 모양  |  보라색 점선: 대칭축', 10, 20);
-}
-
-function checkSymmetric3() {
-  const def = shape3Defs[shape3Type];
-  const res = document.getElementById('result3');
-  if (!def.symmetric) {
-    res.className = 'result fail';
-    res.innerHTML = '❌ 이 도형은 <strong>선대칭도형이 아닙니다</strong>.<br>어느 직선으로 접어도 완전히 겹치지 않아요.';
-    return;
-  }
-  const cx = w3 / 2, cy = h3 / 2;
-  const pts = getShape3Pts().map(p => ({ x: p[0] + cx, y: p[1] + cy }));
-  const axisRad = axisAngle * Math.PI / 180;
-  const dir = { x: Math.cos(axisRad), y: Math.sin(axisRad) };
-  const reflected = pts.map(p => reflectAcrossLine(p, { x: cx, y: cy }, dir));
-  let allMatch = true;
-  for (const r of reflected) {
-    let matched = false;
-    for (const p of pts) {
-      if (Math.hypot(r.x - p.x, r.y - p.y) < 10) { matched = true; break; }
-    }
-    if (!matched) { allMatch = false; break; }
-  }
-  if (allMatch && foldAmount > 85) {
-    res.className = 'result success';
-    res.innerHTML = '🎉 정답! 이 도형은 <strong>선대칭도형</strong>이고,<br>지금 그은 직선이 <strong>대칭축</strong>입니다!';
-  } else if (allMatch) {
-    res.className = 'result success';
-    res.innerHTML = '✓ 대칭축을 올바르게 찾았어요!<br>접기 슬라이더를 100%로 올려서 완전히 겹치는 모습을 확인해 보세요.';
-  } else {
-    res.className = 'result fail';
-    res.innerHTML = '이 직선은 대칭축이 아닙니다.<br>접었을 때 완전히 겹치지 않아요. 다른 각도로 시도해 보세요!';
-  }
-}
-
-function showAllAxes3() {
-  showAllAxes = !showAllAxes;
-  drawCanvas3();
-}
-
-// ============= PANEL 4: 선대칭도형 그리기 =============
-const canvas4 = document.getElementById('canvas4');
-let ctx4, w4, h4;
-const GRID4 = 25;
-let problem4Idx = 0;
-let userPoints4 = [];
-let showHintMode4 = false;
-let panel4Inited = false;
-
-const problems4 = [
-  {
-    name: '사다리꼴',
-    axis: 'vertical', axisX: 11,
-    given: [[5,4],[5,10],[8,10],[10,4]]
-  },
-  {
-    name: '화살표',
-    axis: 'horizontal', axisY: 8,
-    given: [[3,8],[3,5],[9,5],[9,2],[14,8]]
-  },
-  {
-    name: '별 모양',
-    axis: 'vertical', axisX: 11,
-    given: [[3,4],[6,6],[2,8],[7,9],[11,12]]
-  },
-  {
-    name: '집 모양',
-    axis: 'vertical', axisX: 11,
-    given: [[6,11],[6,7],[11,3]]
-  }
-];
-
-function initPanel4() {
-  const dim = setupCanvas(canvas4);
-  ctx4 = dim.ctx; w4 = dim.w; h4 = dim.h;
-  if (!panel4Inited) {
-    canvas4.addEventListener('click', onClick4);
-    panel4Inited = true;
-  }
-  loadProblem4();
-}
-
-function loadProblem4() {
-  problem4Idx = parseInt(document.getElementById('problem4').value);
-  userPoints4 = [];
-  showHintMode4 = false;
-  document.getElementById('result4').innerHTML = '';
-  drawCanvas4();
-}
-
-function clearDrawing4() {
-  userPoints4 = [];
-  showHintMode4 = false;
-  document.getElementById('result4').innerHTML = '';
-  drawCanvas4();
-}
-
-function gridToPx4(gx, gy) {
-  return { x: 50 + gx * GRID4, y: 30 + gy * GRID4 };
-}
-function pxToGrid4(px, py) {
-  return { gx: Math.round((px - 50) / GRID4), gy: Math.round((py - 30) / GRID4) };
-}
-
-function drawCanvas4() {
-  if (!ctx4) return;
-  ctx4.clearRect(0, 0, w4, h4);
-  ctx4.strokeStyle = '#dcecf9';
-  ctx4.lineWidth = 1;
-  const gridCols = Math.floor((w4 - 60) / GRID4);
-  const gridRows = Math.floor((h4 - 40) / GRID4);
-  for (let gx = 0; gx <= gridCols; gx++) {
-    const x = 50 + gx * GRID4;
-    ctx4.beginPath(); ctx4.moveTo(x, 30); ctx4.lineTo(x, 30 + gridRows * GRID4); ctx4.stroke();
-  }
-  for (let gy = 0; gy <= gridRows; gy++) {
-    const y = 30 + gy * GRID4;
-    ctx4.beginPath(); ctx4.moveTo(50, y); ctx4.lineTo(50 + gridCols * GRID4, y); ctx4.stroke();
-  }
-  ctx4.fillStyle = '#b0c4d4';
-  for (let gx = 0; gx <= gridCols; gx++) {
-    for (let gy = 0; gy <= gridRows; gy++) {
-      const p = gridToPx4(gx, gy);
-      ctx4.beginPath(); ctx4.arc(p.x, p.y, 1.5, 0, Math.PI * 2); ctx4.fill();
-    }
-  }
-
-  const prob = problems4[problem4Idx];
-
-  // 대칭축
-  ctx4.strokeStyle = '#9b59b6';
-  ctx4.lineWidth = 2.5;
-  ctx4.setLineDash([8, 4]);
-  if (prob.axis === 'vertical') {
-    const ax = gridToPx4(prob.axisX, 0).x;
-    ctx4.beginPath(); ctx4.moveTo(ax, 20); ctx4.lineTo(ax, 30 + gridRows * GRID4 + 10); ctx4.stroke();
-    ctx4.fillStyle = '#9b59b6';
-    ctx4.font = 'bold 12px sans-serif';
-    ctx4.fillText('대칭축', ax + 5, 18);
-  } else {
-    const ay = gridToPx4(0, prob.axisY).y;
-    ctx4.beginPath(); ctx4.moveTo(40, ay); ctx4.lineTo(50 + gridCols * GRID4, ay); ctx4.stroke();
-    ctx4.fillStyle = '#9b59b6';
-    ctx4.font = 'bold 12px sans-serif';
-    ctx4.fillText('대칭축', 5, ay - 5);
-  }
-  ctx4.setLineDash([]);
-
-  // 주어진 도형
-  const givenPx = prob.given.map(p => gridToPx4(p[0], p[1]));
-  ctx4.strokeStyle = '#2980b9';
-  ctx4.lineWidth = 3;
-  ctx4.beginPath();
-  ctx4.moveTo(givenPx[0].x, givenPx[0].y);
-  for (let i = 1; i < givenPx.length; i++) ctx4.lineTo(givenPx[i].x, givenPx[i].y);
-  ctx4.stroke();
-  givenPx.forEach(p => drawDot(ctx4, p, '#2980b9', 5));
-
-  const correctMirror = getMirroredPoints4();
-
-  // 힌트
-  if (showHintMode4) {
-    correctMirror.forEach(p => {
-      const pxp = gridToPx4(p[0], p[1]);
-      ctx4.strokeStyle = '#27ae60';
-      ctx4.lineWidth = 2;
-      ctx4.setLineDash([3, 3]);
-      ctx4.beginPath();
-      ctx4.arc(pxp.x, pxp.y, 9, 0, Math.PI * 2);
-      ctx4.stroke();
-      ctx4.setLineDash([]);
-    });
-    // 대응점 연결선
-    prob.given.forEach((p, i) => {
-      const start = gridToPx4(p[0], p[1]);
-      const m = gridToPx4(correctMirror[correctMirror.length - 1 - i][0], correctMirror[correctMirror.length - 1 - i][1]);
-      ctx4.strokeStyle = 'rgba(39, 174, 96, 0.4)';
-      ctx4.lineWidth = 1;
-      ctx4.setLineDash([2, 4]);
-      ctx4.beginPath();
-      ctx4.moveTo(start.x, start.y);
-      ctx4.lineTo(m.x, m.y);
-      ctx4.stroke();
-      ctx4.setLineDash([]);
-    });
-  }
-
-  // 사용자가 찍은 점들과 선
-  if (userPoints4.length >= 1) {
-    ctx4.strokeStyle = '#e67e22';
-    ctx4.lineWidth = 2.5;
-    ctx4.beginPath();
-    const lastGiven = givenPx[givenPx.length - 1];
-    ctx4.moveTo(lastGiven.x, lastGiven.y);
-    userPoints4.forEach(p => {
-      const px = gridToPx4(p[0], p[1]);
-      ctx4.lineTo(px.x, px.y);
-    });
-    if (userPoints4.length === givenPx.length) {
-      ctx4.lineTo(givenPx[0].x, givenPx[0].y);
-    }
-    ctx4.stroke();
-    userPoints4.forEach(p => drawDot(ctx4, gridToPx4(p[0], p[1]), '#e67e22', 6));
-  }
-}
-
-function getMirroredPoints4() {
-  const prob = problems4[problem4Idx];
-  const reversed = [];
-  for (let i = prob.given.length - 1; i >= 0; i--) reversed.push(prob.given[i]);
-  return reversed.map(p => {
-    if (prob.axis === 'vertical') {
-      return [2 * prob.axisX - p[0], p[1]];
-    } else {
-      return [p[0], 2 * prob.axisY - p[1]];
-    }
-  });
-}
-
-function onClick4(e) {
-  const pos = getMousePos(canvas4, e);
-  const g = pxToGrid4(pos.x, pos.y);
-  const prob = problems4[problem4Idx];
-  if (g.gx < 0 || g.gy < 0) return;
-  if (prob.axis === 'vertical') {
-    if (g.gx <= prob.axisX) return;
-  } else {
-    if (g.gy <= prob.axisY) return;
-  }
-  const existingIdx = userPoints4.findIndex(p => p[0] === g.gx && p[1] === g.gy);
-  if (existingIdx >= 0) {
-    userPoints4.splice(existingIdx, 1);
-  } else {
-    if (userPoints4.length >= prob.given.length) {
-      userPoints4.shift();
-    }
-    userPoints4.push([g.gx, g.gy]);
-  }
-  drawCanvas4();
-}
-
-function checkDrawing4() {
-  const correct = getMirroredPoints4();
-  const res = document.getElementById('result4');
-  if (userPoints4.length !== correct.length) {
-    res.className = 'result fail';
-    res.innerHTML = `점이 부족하거나 많아요. (필요한 점: ${correct.length}개, 찍은 점: ${userPoints4.length}개)`;
-    return;
-  }
-  let allMatch = true;
-  for (let i = 0; i < correct.length; i++) {
-    if (userPoints4[i][0] !== correct[i][0] || userPoints4[i][1] !== correct[i][1]) {
-      allMatch = false; break;
-    }
-  }
-  if (allMatch) {
-    res.className = 'result success';
-    res.innerHTML = '🎉 완벽한 선대칭도형이에요!<br>대응점이 대칭축에서 같은 거리에 있어요!';
-  } else {
-    res.className = 'result fail';
-    res.innerHTML = '아직 정확하지 않아요.<br>대칭축까지의 거리가 같은지, 순서가 맞는지 확인해 보세요.<br>(💡 힌트 보기 버튼을 눌러보세요!)';
-  }
-}
-
-function showHint4() {
-  showHintMode4 = !showHintMode4;
-  drawCanvas4();
-}
-function autoComplete4() {
-  userPoints4 = getMirroredPoints4().map(p => [p[0], p[1]]);
-  drawCanvas4();
-  document.getElementById('result4').className = 'result success';
-  document.getElementById('result4').innerHTML = '✨ 자동으로 완성했어요!';
-}
-
-// ============= PANEL 5: 점대칭도형 =============
-const canvas5 = document.getElementById('canvas5');
-let ctx5, w5, h5;
-let shape5Type = 'parallel';
-let rotAngle5 = 0;
-let isAnimating5 = false;
-let panel5Inited = false;
-
-const shape5Defs = {
-  parallel: { pts: [[-100,-50],[80,-50],[100,50],[-80,50]], symmetric: true },
-  rect: { pts: [[-100,-60],[100,-60],[100,60],[-100,60]], symmetric: true },
-  rhombus: { pts: [[0,-80],[80,0],[0,80],[-80,0]], symmetric: true },
-  circle: { pts: (function() { const arr=[]; for (let i=0;i<60;i++){const a=i/60*Math.PI*2; arr.push([80*Math.cos(a), 80*Math.sin(a)]);} return arr; })(), symmetric: true },
-  sshape: { pts: [[-60,-80],[60,-80],[60,-20],[20,-20],[20,20],[60,20],[60,80],[-60,80],[-60,20],[-20,20],[-20,-20],[-60,-20]], symmetric: true },
-  hex: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<6;i++){const a=i*Math.PI/3; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: true },
-  triangle: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<3;i++){const a=-Math.PI/2 + i*2*Math.PI/3; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: false },
-  pentagon: { pts: (function() { const r=80; const arr=[]; for (let i=0;i<5;i++){const a=-Math.PI/2 + i*2*Math.PI/5; arr.push([r*Math.cos(a), r*Math.sin(a)]);} return arr; })(), symmetric: false }
-};
-
-function initPanel5() {
-  const dim = setupCanvas(canvas5);
-  ctx5 = dim.ctx; w5 = dim.w; h5 = dim.h;
-  if (!panel5Inited) {
-    document.getElementById('rot5').addEventListener('input', e => {
-      rotAngle5 = parseFloat(e.target.value);
-      document.getElementById('rot5Val').textContent = rotAngle5 + '°';
-      drawCanvas5();
-    });
-    panel5Inited = true;
-  }
-  drawCanvas5();
-}
-
-function setShape5() {
-  shape5Type = document.getElementById('shape5').value;
-  rotAngle5 = 0;
-  document.getElementById('rot5').value = 0;
-  document.getElementById('rot5Val').textContent = '0°';
-  document.getElementById('result5').innerHTML = '';
-  drawCanvas5();
-}
-
-function resetRot5() {
-  rotAngle5 = 0;
-  document.getElementById('rot5').value = 0;
-  document.getElementById('rot5Val').textContent = '0°';
-  drawCanvas5();
-}
-
-function rotate180_5() {
-  if (isAnimating5) return;
-  isAnimating5 = true;
-  const start = rotAngle5;
-  const target = start + 180;
-  const duration = 1500;
-  const startTime = performance.now();
-  function step(now) {
-    const t = Math.min(1, (now - startTime) / duration);
-    rotAngle5 = start + (target - start) * t;
-    const display = ((rotAngle5 % 360) + 360) % 360;
-    document.getElementById('rot5').value = display;
-    document.getElementById('rot5Val').textContent = Math.round(display) + '°';
-    drawCanvas5();
-    if (t < 1) {
-      requestAnimationFrame(step);
-    } else {
-      isAnimating5 = false;
-      checkPointSymmetric5();
-    }
-  }
-  requestAnimationFrame(step);
-}
-
-function drawCanvas5() {
-  if (!ctx5) return;
-  ctx5.clearRect(0, 0, w5, h5);
-  drawGrid(ctx5, w5, h5);
-  const cx = w5 / 2, cy = h5 / 2;
-
-  const def = shape5Defs[shape5Type];
-  const orig = def.pts.map(p => ({ x: p[0] + cx, y: p[1] + cy }));
-
-  // 원래 도형 (회색 점선)
-  ctx5.setLineDash([4, 3]);
-  drawShape(ctx5, orig, 'rgba(189, 195, 199, 0.3)', '#7f8c8d', 2);
-  ctx5.setLineDash([]);
-
-  // 회전된 도형
-  const rotated = orig.map(p => rotatePoint(p, cx, cy, rotAngle5));
-  drawShape(ctx5, rotated, 'rgba(155, 89, 182, 0.4)', '#9b59b6', 3);
-
-  // 회전 궤적
-  if (rotAngle5 > 0 && rotAngle5 < 360) {
-    ctx5.strokeStyle = 'rgba(231, 76, 60, 0.25)';
-    ctx5.lineWidth = 1;
-    ctx5.setLineDash([2, 3]);
-    const step = Math.max(1, Math.floor(orig.length / 6));
-    for (let i = 0; i < orig.length; i += step) {
-      const p = orig[i];
-      const r = Math.hypot(p.x - cx, p.y - cy);
-      if (r < 5) continue;
-      const startA = Math.atan2(p.y - cy, p.x - cx);
-      ctx5.beginPath();
-      ctx5.arc(cx, cy, r, startA, startA + rotAngle5 * Math.PI / 180);
-      ctx5.stroke();
-    }
-    ctx5.setLineDash([]);
-  }
-
-  // 대칭의 중심
-  ctx5.fillStyle = '#e74c3c';
-  ctx5.beginPath();
-  ctx5.arc(cx, cy, 7, 0, Math.PI * 2);
-  ctx5.fill();
-  ctx5.strokeStyle = '#fff';
-  ctx5.lineWidth = 2;
-  ctx5.stroke();
-
-  ctx5.fillStyle = '#7f8c8d';
-  ctx5.font = '12px sans-serif';
-  ctx5.fillText('회색 점선: 원래 도형  |  보라색: 회전된 도형  |  빨간 점: 회전 중심', 10, 20);
-}
-
-function checkPointSymmetric5() {
-  const res = document.getElementById('result5');
-  const def = shape5Defs[shape5Type];
-  const ang = ((rotAngle5 % 360) + 360) % 360;
-  if (Math.abs(ang - 180) > 5) {
-    res.className = 'result fail';
-    res.innerHTML = '아직 180°가 아니에요. 회전 슬라이더를 180°에 맞추거나 "180° 돌리기" 버튼을 눌러보세요!';
-    return;
-  }
-  if (def.symmetric) {
-    res.className = 'result success';
-    res.innerHTML = '🎉 정답! 이 도형은 <strong>점대칭도형</strong>입니다.<br>180° 돌렸을 때 원래 도형과 완전히 겹쳐요!';
-  } else {
-    res.className = 'result fail';
-    res.innerHTML = '❌ 이 도형은 <strong>점대칭도형이 아닙니다</strong>.<br>180° 돌렸을 때 원래 도형과 겹치지 않아요.';
-  }
-}
-
-// ============= PANEL 6: 점대칭도형 그리기 =============
-const canvas6 = document.getElementById('canvas6');
-let ctx6, w6, h6;
-const GRID6 = 25;
-let problem6Idx = 0;
-let userPoints6 = [];
-let showHintMode6 = false;
-let panel6Inited = false;
-
-const problems6 = [
-  { name: '깃발', center: [10, 8], given: [[4,4],[4,10],[7,10],[7,8],[10,8]] },
-  { name: '화살', center: [11, 8], given: [[5,4],[8,8],[5,12],[5,9],[11,9]] },
-  { name: '지그재그', center: [12, 8], given: [[4,4],[8,6],[4,8],[8,10],[12,10]] },
-  { name: '갈고리', center: [11, 8], given: [[4,4],[4,11],[9,11],[9,7],[11,7]] }
-];
-
-function initPanel6() {
-  const dim = setupCanvas(canvas6);
-  ctx6 = dim.ctx; w6 = dim.w; h6 = dim.h;
-  if (!panel6Inited) {
-    canvas6.addEventListener('click', onClick6);
-    panel6Inited = true;
-  }
-  loadProblem6();
-}
-
-function loadProblem6() {
-  problem6Idx = parseInt(document.getElementById('problem6').value);
-  userPoints6 = [];
-  showHintMode6 = false;
-  document.getElementById('result6').innerHTML = '';
-  drawCanvas6();
-}
-
-function clearDrawing6() {
-  userPoints6 = [];
-  showHintMode6 = false;
-  document.getElementById('result6').innerHTML = '';
-  drawCanvas6();
-}
-
-function gridToPx6(gx, gy) {
-  return { x: 30 + gx * GRID6, y: 25 + gy * GRID6 };
-}
-function pxToGrid6(px, py) {
-  return { gx: Math.round((px - 30) / GRID6), gy: Math.round((py - 25) / GRID6) };
-}
-
-function drawCanvas6() {
-  if (!ctx6) return;
-  ctx6.clearRect(0, 0, w6, h6);
-  ctx6.strokeStyle = '#dcecf9';
-  ctx6.lineWidth = 1;
-  const gridCols = Math.floor((w6 - 40) / GRID6);
-  const gridRows = Math.floor((h6 - 30) / GRID6);
-  for (let gx = 0; gx <= gridCols; gx++) {
-    const x = 30 + gx * GRID6;
-    ctx6.beginPath(); ctx6.moveTo(x, 25); ctx6.lineTo(x, 25 + gridRows * GRID6); ctx6.stroke();
-  }
-  for (let gy = 0; gy <= gridRows; gy++) {
-    const y = 25 + gy * GRID6;
-    ctx6.beginPath(); ctx6.moveTo(30, y); ctx6.lineTo(30 + gridCols * GRID6, y); ctx6.stroke();
-  }
-  ctx6.fillStyle = '#b0c4d4';
-  for (let gx = 0; gx <= gridCols; gx++) {
-    for (let gy = 0; gy <= gridRows; gy++) {
-      const p = gridToPx6(gx, gy);
-      ctx6.beginPath(); ctx6.arc(p.x, p.y, 1.5, 0, Math.PI * 2); ctx6.fill();
-    }
-  }
-
-  const prob = problems6[problem6Idx];
-  const centerPx = gridToPx6(prob.center[0], prob.center[1]);
-
-  // 주어진 도형
-  const givenPx = prob.given.map(p => gridToPx6(p[0], p[1]));
-  ctx6.strokeStyle = '#2980b9';
-  ctx6.lineWidth = 3;
-  ctx6.beginPath();
-  ctx6.moveTo(givenPx[0].x, givenPx[0].y);
-  for (let i = 1; i < givenPx.length; i++) ctx6.lineTo(givenPx[i].x, givenPx[i].y);
-  ctx6.stroke();
-  givenPx.forEach(p => drawDot(ctx6, p, '#2980b9', 5));
-
-  const correct = getMirroredPoints6();
-
-  if (showHintMode6) {
-    correct.forEach(p => {
-      const pxp = gridToPx6(p[0], p[1]);
-      ctx6.strokeStyle = '#27ae60';
-      ctx6.lineWidth = 2;
-      ctx6.setLineDash([3, 3]);
-      ctx6.beginPath();
-      ctx6.arc(pxp.x, pxp.y, 9, 0, Math.PI * 2);
-      ctx6.stroke();
-      ctx6.setLineDash([]);
-    });
-    // 대응점 연결선 (대칭의 중심 지남)
-    prob.given.forEach((p, i) => {
-      const m = correct[correct.length - 1 - i];
-      const startPx = gridToPx6(p[0], p[1]);
-      const endPx = gridToPx6(m[0], m[1]);
-      ctx6.strokeStyle = 'rgba(39, 174, 96, 0.35)';
-      ctx6.lineWidth = 1;
-      ctx6.setLineDash([2, 4]);
-      ctx6.beginPath();
-      ctx6.moveTo(startPx.x, startPx.y);
-      ctx6.lineTo(endPx.x, endPx.y);
-      ctx6.stroke();
-      ctx6.setLineDash([]);
-    });
-  }
-
-  // 사용자 점과 선
-  if (userPoints6.length >= 1) {
-    ctx6.strokeStyle = '#e67e22';
-    ctx6.lineWidth = 2.5;
-    ctx6.beginPath();
-    const lastGiven = givenPx[givenPx.length - 1];
-    ctx6.moveTo(lastGiven.x, lastGiven.y);
-    userPoints6.forEach(p => {
-      const px = gridToPx6(p[0], p[1]);
-      ctx6.lineTo(px.x, px.y);
-    });
-    if (userPoints6.length === givenPx.length) {
-      ctx6.lineTo(givenPx[0].x, givenPx[0].y);
-    }
-    ctx6.stroke();
-    userPoints6.forEach(p => drawDot(ctx6, gridToPx6(p[0], p[1]), '#e67e22', 6));
-  }
-
-  // 대칭의 중심
-  ctx6.fillStyle = '#e74c3c';
-  ctx6.beginPath();
-  ctx6.arc(centerPx.x, centerPx.y, 7, 0, Math.PI * 2);
-  ctx6.fill();
-  ctx6.strokeStyle = '#fff';
-  ctx6.lineWidth = 2;
-  ctx6.stroke();
-  ctx6.fillStyle = '#c0392b';
-  ctx6.font = 'bold 12px sans-serif';
-  ctx6.fillText('대칭의 중심', centerPx.x + 12, centerPx.y - 8);
-}
-
-function getMirroredPoints6() {
-  const prob = problems6[problem6Idx];
-  const reversed = [];
-  for (let i = prob.given.length - 1; i >= 0; i--) reversed.push(prob.given[i]);
-  return reversed.map(p => [2 * prob.center[0] - p[0], 2 * prob.center[1] - p[1]]);
-}
-
-function onClick6(e) {
-  const pos = getMousePos(canvas6, e);
-  const g = pxToGrid6(pos.x, pos.y);
-  if (g.gx < 0 || g.gy < 0) return;
-  const prob = problems6[problem6Idx];
-  const existingIdx = userPoints6.findIndex(p => p[0] === g.gx && p[1] === g.gy);
-  if (existingIdx >= 0) {
-    userPoints6.splice(existingIdx, 1);
-  } else {
-    if (userPoints6.length >= prob.given.length) {
-      userPoints6.shift();
-    }
-    userPoints6.push([g.gx, g.gy]);
-  }
-  drawCanvas6();
-}
-
-function checkDrawing6() {
-  const correct = getMirroredPoints6();
-  const res = document.getElementById('result6');
-  if (userPoints6.length !== correct.length) {
-    res.className = 'result fail';
-    res.innerHTML = `점이 부족하거나 많아요. (필요: ${correct.length}개, 찍은 점: ${userPoints6.length}개)`;
-    return;
-  }
-  let allMatch = true;
-  for (let i = 0; i < correct.length; i++) {
-    if (userPoints6[i][0] !== correct[i][0] || userPoints6[i][1] !== correct[i][1]) {
-      allMatch = false; break;
-    }
-  }
-  if (allMatch) {
-    res.className = 'result success';
-    res.innerHTML = '🎉 완벽한 점대칭도형이에요!<br>대칭의 중심에서 대응점까지의 거리가 모두 같아요!';
-  } else {
-    res.className = 'result fail';
-    res.innerHTML = '아직 정확하지 않아요.<br>대칭의 중심을 지나고 같은 거리의 반대편에 점을 찍어야 해요.';
-  }
-}
-
-function showHint6() {
-  showHintMode6 = !showHintMode6;
-  drawCanvas6();
-}
-function autoComplete6() {
-  userPoints6 = getMirroredPoints6().map(p => [p[0], p[1]]);
-  drawCanvas6();
-  document.getElementById('result6').className = 'result success';
-  document.getElementById('result6').innerHTML = '✨ 자동으로 완성했어요!';
-}
-
-// ============= 초기화 =============
-window.addEventListener('load', () => {
-  tabSwitch();
-  initPanel1();
-});
-window.addEventListener('resize', () => {
-  panel1Inited = panel2Inited = panel3Inited = panel4Inited = panel5Inited = panel6Inited = false;
-  // 현재 활성 패널만 재초기화
-  const active = document.querySelector('.panel.active');
-  if (!active) return;
-  if (active.id === 'p1') initPanel1();
-  if (active.id === 'p2') initPanel2();
-  if (active.id === 'p3') initPanel3();
-  if (active.id === 'p4') initPanel4();
-  if (active.id === 'p5') initPanel5();
-  if (active.id === 'p6') initPanel6();
-});
-</script>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo, useCallback, useId, Fragment } = React;
+
+        const SHEET_CSV_URL = "";
+        const DEFAULT_NAMES = ["김민지","이서준","박지윤","최도윤","정하은","강시우","조유나","윤지호","장수아","임건우","한채원","오민서","신예준","황지유","전하준","송예린","권민준","노이안","백서연","유라온"];
+
+        const useNames = () => {
+            const [names, setNames] = useState(DEFAULT_NAMES);
+            useEffect(() => {
+                if (!SHEET_CSV_URL) return;
+                fetch(SHEET_CSV_URL).then(r => r.ok ? r.text() : Promise.reject())
+                    .then(text => {
+                        const rows = text.split(/\r?\n/).map(r => r.split(',')[0].trim().replace(/^"|"$/g,''));
+                        const filt = rows.filter(n => n && !/^(이름|name)$/i.test(n));
+                        if (filt.length) setNames(filt);
+                    }).catch(() => {});
+            }, []);
+            return names;
+        };
+
+        const LESSONS = [
+            {
+                id: 'cong', no: 1,
+                title: '쌍둥이 마을', subtitle: '합동',
+                color: '#FF7B53', light: '#FFE0D0', deep: '#BE3D14', hlClass: 'hl-c',
+                stages: ['뜻 알기', '쌍둥이 찾기', '대응 요소', '성질 발견', '직접 그리기']
+            },
+            {
+                id: 'line', no: 2,
+                title: '거울 호수', subtitle: '선대칭 도형',
+                color: '#1AB89B', light: '#C8F2E8', deep: '#006E5C', hlClass: 'hl-l',
+                stages: ['뜻 알기', '종이 접기', '대칭축 찾기', '거리의 비밀', '직접 그리기']
+            },
+            {
+                id: 'pt', no: 3,
+                title: '회전 광장', subtitle: '점대칭 도형',
+                color: '#9870E0', light: '#EADAFA', deep: '#5A2EAA', hlClass: 'hl-p',
+                stages: ['뜻 알기', '돌려 보기', '중심 찾기', '거리의 비밀', '직접 그리기']
+            }
+        ];
+
+        const useProgress = () => {
+            const [seals, setSeals] = useState({});
+            const totalSeals = LESSONS.reduce((s, l) => s + l.stages.length, 0);
+            const earnedCount = Object.values(seals).reduce((s, a) => s + (a ? a.length : 0), 0);
+            const markSealed = useCallback((lId, sIdx) => {
+                setSeals(p => {
+                    const cur = p[lId] || [];
+                    if (cur.includes(sIdx)) return p;
+                    return { ...p, [lId]: [...cur, sIdx] };
+                });
+            }, []);
+            const lessonSealCount = useCallback(lId => (seals[lId] || []).length, [seals]);
+            const isSealed = useCallback((lId, sIdx) => (seals[lId] || []).includes(sIdx), [seals]);
+            const reset = () => setSeals({});
+            return { seals, totalSeals, earnedCount, markSealed, lessonSealCount, isSealed, reset };
+        };
+
+        const useSvgCoord = (svgRef) => useCallback((e) => {
+            const svg = svgRef.current; if (!svg) return null;
+            const ev = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : e);
+            const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+            const ctm = svg.getScreenCTM(); if (!ctm) return null;
+            const local = pt.matrixTransform(ctm.inverse());
+            return { x: local.x, y: local.y };
+        }, []);
+
+        const Mascot = ({ size = 80 }) => (
+            <svg viewBox="0 0 100 100" width={size} height={size} style={{ flexShrink: 0 }}>
+                {/* 諛곌꼍 ?곗퐫 ??怨듬갑???꾪삎??*/}
+                <polygon points="12,48 24,36 20,60" fill="#1AB89B" stroke="#006E5C" strokeWidth="1.5" strokeLinejoin="round" opacity="0.85" />
+                <rect x="76" y="38" width="16" height="16" rx="3" fill="#FFE45D" stroke="#B48C50" strokeWidth="1.5" opacity="0.85" />
+                
+                {/* 洹 */}
+                <path d="M 18 48 C 14 48, 14 56, 18 56 Z" fill="#FDD6B5" stroke="#9A5212" strokeWidth="2.5" />
+                <path d="M 82 48 C 86 48, 86 56, 82 56 Z" fill="#FDD6B5" stroke="#9A5212" strokeWidth="2.5" />
+                
+                {/* 紐?*/}
+                <rect x="44" y="80" width="12" height="10" fill="#FCD5B5" stroke="#9A5212" strokeWidth="2.5" />
+                
+                {/* ?쇨뎬 蹂몄껜 */}
+                <circle cx="50" cy="52" r="32" fill="#FDD6B5" stroke="#9A5212" strokeWidth="3" />
+                
+                {/* 癒몃━移대씫 (?덉뜾 ??& 洹 ?? */}
+                <path d="M 20 44 C 20 34, 30 28, 38 30 C 44 26, 56 26, 62 30 C 70 28, 80 34, 80 44 C 80 44, 76 38, 70 40 C 66 36, 56 36, 50 40 C 44 36, 34 36, 30 40 C 24 38, 20 44, 20 44 Z" fill="#4E3629" />
+                
+                {/* ?덉뜾 */}
+                <path d="M 30 36 Q 37 32 43 37" fill="none" stroke="#4E3629" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M 57 37 Q 63 32 70 36" fill="none" stroke="#4E3629" strokeWidth="2.5" strokeLinecap="round" />
+                
+                {/* ??*/}
+                <circle cx="38" cy="49" r="3.5" fill="#2A1F18" />
+                <circle cx="62" cy="49" r="3.5" fill="#2A1F18" />
+                <circle cx="39.5" cy="47.5" r="1" fill="white" />
+                <circle cx="63.5" cy="47.5" r="1" fill="white" />
+                
+                {/* ?숆???湲덊뀒 ?덇꼍 */}
+                <circle cx="38" cy="49" r="10" fill="none" stroke="#D97706" strokeWidth="2" />
+                <circle cx="62" cy="49" r="10" fill="none" stroke="#D97706" strokeWidth="2" />
+                <path d="M 48 49 Q 50 46 52 49" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" />
+                <path d="M 28 49 L 20 47" fill="none" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M 72 49 L 80 47" fill="none" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" />
+                
+                {/* 肄㏃닔??*/}
+                <path d="M 50 60 Q 42 55 35 59 C 33 60, 34 63, 37 63 Q 44 62 50 61" fill="#4E3629" stroke="#2D1F17" strokeWidth="1.2" strokeLinejoin="round" />
+                <path d="M 50 60 Q 58 55 65 59 C 67 60, 66 63, 63 63 Q 56 62 50 61" fill="#4E3629" stroke="#2D1F17" strokeWidth="1.2" strokeLinejoin="round" />
+                
+                {/* 蹂쇳꽣移?*/}
+                <circle cx="28" cy="56" r="4" fill="#FF8A8A" opacity="0.45" />
+                <circle cx="72" cy="56" r="4" fill="#FF8A8A" opacity="0.45" />
+                
+                {/* ?껊뒗 ??*/}
+                <path d="M 46 66 Q 50 70 54 66" fill="none" stroke="#2A1F18" strokeWidth="2.2" strokeLinecap="round" />
+                
+                {/* 怨듬갑 ?μ씤 紐⑥옄 (?묒뾽 踰좊젅紐? */}
+                <path d="M 20 28 C 18 14, 52 8, 74 16 C 80 19, 82 25, 78 28 C 74 31, 24 31, 20 28 Z" fill="#5C4A38" stroke="#2D1F17" strokeWidth="2" strokeLinejoin="round" />
+                <path d="M 48 10 Q 50 4 53 7" fill="none" stroke="#2D1F17" strokeWidth="2" strokeLinecap="round" />
+                
+                {/* ??移쇰씪 & 由щ낯 */}
+                <path d="M 36 84 L 50 90 L 64 84 L 60 98 L 40 98 Z" fill="#7C4A27" stroke="#2D1F17" strokeWidth="2" />
+                <polygon points="50,90 46,95 50,98 54,95" fill="#E11D48" />
+            </svg>
+        );
+
+        const Says = ({ children, color }) => (
+            <div className="surface a-fade" style={{ padding: 'clamp(0.85rem,1.6vw,1.2rem)' }}>
+                <div className="flex items-center" style={{ gap: 'clamp(0.7rem,1.4vw,1.1rem)' }}>
+                    <Mascot size={56} />
+                    <div className="flex-1 min-w-0 t-base" style={{ color: color || 'var(--ink-1)', fontWeight: 600 }}>
+                        {children}
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Discover = ({ children }) => (
+            <div className="insight-card a-fade">
+                <div className="t-lg ff-display" style={{ color: 'var(--ink-1)' }}>{children}</div>
+            </div>
+        );
+
+        const Hint = ({ children, color }) => (
+            <div className="surface-soft" style={{ padding: 'clamp(0.7rem,1.4vw,1rem)' }}>
+                <div className="t-base" style={{ color: color || 'var(--ink-2)' }}>{children}</div>
+            </div>
+        );
+
+        const InteractiveShape = ({ svgRef, poly, pos, setPos, rot, setRot, fill, stroke, strokeW = 3, handleDist = 80, color }) => {
+            const toCoord = useSvgCoord(svgRef);
+            const mode = useRef(null);
+            const dragOff = useRef({ x: 0, y: 0 });
+            const rotStart = useRef({ ma: 0, r: 0 });
+            const c = color || stroke;
+
+            const onBodyDown = (e) => {
+                e.stopPropagation();
+                const co = toCoord(e); if (!co) return;
+                mode.current = 'drag';
+                dragOff.current = { x: pos.x - co.x, y: pos.y - co.y };
+                e.preventDefault();
+            };
+            const onRotDown = (e) => {
+                e.stopPropagation();
+                const co = toCoord(e); if (!co) return;
+                mode.current = 'rot';
+                rotStart.current = {
+                    ma: Math.atan2(co.y - pos.y, co.x - pos.x) * 180 / Math.PI,
+                    r: rot
+                };
+                e.preventDefault();
+            };
+
+            useEffect(() => {
+                const move = (e) => {
+                    if (!mode.current) return;
+                    const co = toCoord(e); if (!co) return;
+                    if (mode.current === 'drag') {
+                        setPos({ x: co.x + dragOff.current.x, y: co.y + dragOff.current.y });
+                    } else {
+                        const ang = Math.atan2(co.y - pos.y, co.x - pos.x) * 180 / Math.PI;
+                        setRot(rotStart.current.r + (ang - rotStart.current.ma));
+                    }
+                    if (e.cancelable) e.preventDefault();
+                };
+                const up = () => { mode.current = null; };
+                window.addEventListener('mousemove', move);
+                window.addEventListener('mouseup', up);
+                window.addEventListener('touchmove', move, { passive: false });
+                window.addEventListener('touchend', up);
+                return () => {
+                    window.removeEventListener('mousemove', move);
+                    window.removeEventListener('mouseup', up);
+                    window.removeEventListener('touchmove', move);
+                    window.removeEventListener('touchend', up);
+                };
+            }, [pos, rot, toCoord]);
+
+            const hx = handleDist * 0.7;
+            const hy = -handleDist * 0.7;
+            return (
+                <g transform={`translate(${pos.x}, ${pos.y}) rotate(${rot})`}>
+                    <polygon points={poly} fill={fill} stroke={stroke} strokeWidth={strokeW} strokeLinejoin="round"
+                        onMouseDown={onBodyDown} onTouchStart={onBodyDown}
+                        style={{ cursor: 'grab', touchAction: 'none' }} />
+                    <g transform={`translate(${hx}, ${hy})`}
+                       onMouseDown={onRotDown} onTouchStart={onRotDown}
+                       style={{ cursor: 'grab', touchAction: 'none' }}>
+                        <circle r="20" fill="white" stroke={c} strokeWidth="3" />
+                        <path d="M -9 -2 A 9 9 0 1 0 2 -9" fill="none" stroke={c} strokeWidth="2.8" strokeLinecap="round" />
+                        <path d="M -2 -12 L 4 -8 L 0 -2 Z" fill={c} />
+                    </g>
+                </g>
+            );
+        };
+
+        const SideTabs = ({ stages, currentIdx, doneArr, onJump, color, deep }) => (
+            <div className="index-tabs" style={{ '--tab-c': color }}>
+                {stages.map((s, i) => {
+                    const isCur = i === currentIdx;
+                    const isDone = doneArr && doneArr[i];
+                    return (
+                        <button key={i} onClick={() => onJump(i)}
+                            className={`index-tab ${isCur ? 'active' : ''} ${isDone ? 'done' : ''}`}
+                            style={{ '--tab-c': color }}>
+                            <span className="tab-no">{isDone && !isCur ? '★' : i + 1}</span>
+                            <span className="tab-title">{s}</span>
+                        </button>
+                    );
+                })}
+            </div>
+        );
+
+        const LeafCorner = ({ className }) => (
+            <svg viewBox="0 0 64 64" className={className}>
+                <path d="M 8 56 Q 8 30 32 14 Q 56 22 56 56 Q 36 42 8 56 Z" fill="#C8924E" opacity="0.7" />
+                <path d="M 16 50 Q 28 36 48 28" stroke="#9A6B2F" strokeWidth="1.5" fill="none" opacity="0.7" />
+            </svg>
+        );
+
+        const HomeHeader = ({ studentName, onChangeName, prog, onReset }) => (
+            <header className="flex items-center justify-between gap-3" style={{ padding: 'clamp(0.7rem,1.5vw,1.1rem) clamp(1rem,2vw,2rem)', borderBottom: '2px solid var(--line-soft)' }}>
+                <div className="flex items-center" style={{ gap: 'clamp(0.7rem,1.4vw,1.1rem)' }}>
+                    <Mascot size={56} />
+                    <div>
+                        <div className="ff-display t-xl" style={{ color: 'var(--ink-1)' }}>도형 공방</div>
+                        <div className="t-sm" style={{ color: 'var(--ink-2)' }}>
+                            안녕, <b className="hl">{studentName}</b> 도제!
+                            <button onClick={onChangeName} className="t-xs underline ml-2" style={{ color: 'var(--ink-3)' }}>(이름 바꾸기)</button>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <div className="badge">⭐ <b>{prog.earnedCount}</b> / {prog.totalSeals}</div>
+                    <button onClick={onReset} className="t-xs underline" style={{ color: 'var(--ink-3)' }}>↻ 진도 초기화</button>
+                </div>
+            </header>
+        );
+
+        const LessonHeader = ({ lesson, stageIdx, totalStages, stageTitle, onExit }) => (
+            <header className="flex items-center justify-between gap-3" style={{ padding: 'clamp(0.6rem,1.3vw,1rem) clamp(1rem,2vw,1.5rem)', borderBottom: `3px solid ${lesson.light}` }}>
+                <button onClick={onExit} className="btn btn-soft" style={{ fontFamily: 'Gowun Dodum', fontWeight: 700 }}>← 공방으로</button>
+                <div className="flex items-baseline gap-2 min-w-0 ff-display">
+                    <div className="t-sm" style={{ color: lesson.color }}>{lesson.subtitle}</div>
+                    <div className="t-lg truncate" style={{ color: 'var(--ink-1)' }}>· {stageTitle}</div>
+                </div>
+                <div className="t-sm t-mono ff-display" style={{ color: 'var(--ink-3)' }}>{stageIdx + 1} / {totalStages}</div>
+            </header>
+        );
+
+        const LessonFooter = ({ lesson, stageIdx, totalStages, canNext, onPrev, onNext, nextLabel, doneArr }) => (
+            <footer className="flex items-center justify-between gap-3" style={{ padding: 'clamp(0.6rem,1.2vw,1rem) clamp(1rem,2vw,1.5rem)', borderTop: `3px solid ${lesson.light}` }}>
+                <button onClick={onPrev} className="btn btn-soft" style={{ visibility: stageIdx === 0 ? 'hidden' : 'visible', fontFamily: 'Gowun Dodum', fontWeight: 700 }}>← 이전</button>
+                <div className="flex items-center gap-2">
+                    {Array.from({ length: totalStages }).map((_, i) => (
+                        <span key={i} style={{
+                            width: i === stageIdx ? '28px' : '10px', height: '10px', borderRadius: '9999px',
+                            background: doneArr && doneArr[i] ? lesson.color : (i === stageIdx ? lesson.color : 'var(--ink-soft)'),
+                            transition: 'all 0.25s'
+                        }} />
+                    ))}
+                </div>
+                <button onClick={onNext} disabled={!canNext} className="btn btn-primary"
+                    style={{ background: canNext ? lesson.color : 'var(--ink-soft)' }}>
+                    {nextLabel || '다음 →'}
+                </button>
+            </footer>
+        );
+
+        const NameStage = ({ names, onEnter }) => {
+            const [pick, setPick] = useState("");
+            return (
+                <div className="center-page a-fade">
+                    <div className="surface text-center" style={{ padding: 'clamp(2rem,4vw,3rem)', maxWidth: '520px', width: '92%' }}>
+                        <div className="flex justify-center mb-4"><Mascot size={96} /></div>
+                        <div className="ff-display t-sm mb-2" style={{ color: 'var(--ink-3)', letterSpacing: '0.05em' }}>도형 공방</div>
+                        <h1 className="ff-display t-hero mb-3" style={{ color: 'var(--ink-1)' }}>합동과 대칭</h1>
+                        <p className="t-base mb-6" style={{ color: 'var(--ink-2)' }}>
+                            <span className="hl">세 마을</span>을 차례로 탐험해 봅니다.
+                        </p>
+                        <select value={pick} onChange={e => setPick(e.target.value)} className="refined w-full mb-4">
+                            <option value="">— 이름 선택 —</option>
+                            {names.map(n => <option key={n} value={n}>{n}</option>)}
+                        </select>
+                        <button onClick={() => pick && onEnter(pick)} disabled={!pick}
+                            className="btn btn-primary w-full"
+                            style={{ background: pick ? 'var(--c-cong)' : 'var(--ink-soft)' }}>
+                            공방에 들어가기 →
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const HomeArt = ({ id }) => {
+            const stroke = 'rgba(255,255,255,0.98)';
+            if (id === 'cong') return (
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <polygon points="18,72 40,28 62,72" fill="none" stroke={stroke} strokeWidth="3.5" strokeLinejoin="round" />
+                    <polygon points="42,80 64,36 86,80" fill="none" stroke={stroke} strokeWidth="3.5" strokeLinejoin="round" opacity="0.85" />
+                </svg>
+            );
+            if (id === 'line') return (
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <line x1="50" y1="14" x2="50" y2="86" stroke={stroke} strokeWidth="2" strokeDasharray="4,3" opacity="0.9" />
+                    <polygon points="30,30 50,30 50,75 22,75" fill="none" stroke={stroke} strokeWidth="3.5" strokeLinejoin="round" />
+                    <polygon points="70,30 50,30 50,75 78,75" fill="none" stroke={stroke} strokeWidth="3.5" strokeLinejoin="round" />
+                </svg>
+            );
+            return (
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <polygon points="22,32 76,24 78,68 24,76" fill="none" stroke={stroke} strokeWidth="3.5" strokeLinejoin="round" />
+                    <circle cx="50" cy="50" r="5" fill="#FFC44D" stroke={stroke} strokeWidth="2" />
+                </svg>
+            );
+        };
+
+        const LessonCard = ({ lesson, idx, sealCount }) => {
+            const total = lesson.stages.length;
+            return (
+                <div className="lift rounded-3xl flex flex-col relative" style={{
+                    background: `linear-gradient(160deg, ${lesson.color}, ${lesson.deep})`,
+                    padding: 'clamp(1rem, 2.2vw, 1.6rem)',
+                    boxShadow: '0 10px 24px -10px rgba(0,0,0,0.28), inset 0 -5px 0 rgba(0,0,0,0.1)',
+                    minHeight: 'clamp(280px,38vw,400px)'
+                }}>
+                    <div className="absolute top-3 left-3 rounded-full bg-white flex items-center justify-center ff-display"
+                         style={{ width: '40px', height: '40px', color: lesson.deep, fontSize: '1.2rem', boxShadow: '0 3px 0 rgba(0,0,0,0.14)' }}>
+                        {idx + 1}
+                    </div>
+                    <div className="mx-auto mt-4 mb-3" style={{ width: 'clamp(95px,14vw,160px)', height: 'clamp(95px,14vw,160px)' }}>
+                        <HomeArt id={lesson.id} />
+                    </div>
+                    <div className="text-center text-white ff-display">
+                        <div className="t-xl drop-shadow">{lesson.title}</div>
+                        <div className="t-base mb-2" style={{ opacity: 0.95 }}>{lesson.subtitle}</div>
+                    </div>
+                    <div className="flex justify-center gap-2 mb-3">
+                        {Array.from({ length: total }).map((_, i) => (
+                            <span key={i} style={{ fontSize: '1.6rem', color: i < sealCount ? '#FFE45D' : 'rgba(255,255,255,0.4)' }}>
+                                {i < sealCount ? '★' : '☆'}
+                            </span>
+                        ))}
+                    </div>
+                    <div className="mt-auto bg-white rounded-full py-3 px-4 text-center ff-display"
+                         style={{ color: lesson.deep, boxShadow: '0 3px 0 rgba(0,0,0,0.12)', fontSize: 'var(--fs-base)' }}>
+                        시작하기 →
+                    </div>
+                </div>
+            );
+        };
+
+        const HomeStage = ({ studentName, prog, onPick, onChangeName, onReset }) => (
+            <div className="page">
+                <HomeHeader studentName={studentName} onChangeName={onChangeName} prog={prog} onReset={onReset} />
+                <main className="page-main page-pad">
+                    <div className="h-full max-w-6xl mx-auto w-full flex flex-col" style={{ gap: 'var(--gap-md)' }}>
+                        <div className="text-center" style={{ paddingTop: '0.3rem' }}>
+                            <div className="ff-display t-sm" style={{ color: 'var(--ink-3)' }}>오늘의 수업</div>
+                            <h2 className="ff-display t-2xl mt-1">어느 마을부터 갈까?</h2>
+                        </div>
+                        <div className="flex-1 grid min-h-0 items-center" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 'var(--gap-md)' }}>
+                            {LESSONS.map((l, i) => (
+                                <button key={l.id} onClick={() => onPick(l.id)} className="block w-full text-left">
+                                    <LessonCard lesson={l} idx={i} sealCount={prog.lessonSealCount(l.id)} />
+                                </button>
+                            ))}
+                        </div>
+                        <div className="text-center t-sm" style={{ color: 'var(--ink-2)' }}>
+                            💡 각 마을에서 <span className="hl">다섯 단계</span>를 마치면 별을 받아요. 마지막은 <span className="hl">직접 그리기</span>!
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+
+        const StageBody = ({ children }) => (
+            <main className="page-main page-pad">
+                <div className="h-full max-w-6xl w-full mx-auto" style={{ display: 'grid', placeItems: 'stretch', minHeight: 0 }}>
+                    {children}
+                </div>
+            </main>
+        );
+
+        const Split = ({ canvas, panel }) => (
+            <div className="h-full w-full grid min-h-0 md:grid-cols-[minmax(0,1fr)_minmax(260px,340px)] grid-cols-1 md:grid-rows-1 grid-rows-[minmax(0,1.2fr)_minmax(0,1fr)]" style={{ gap: 'var(--gap-md)' }}>
+                <div className="min-h-0 surface relative overflow-hidden" style={{ padding: '0.5rem' }}>{canvas}</div>
+                <div className="min-h-0 flex flex-col no-scrollbar" style={{ gap: 'var(--gap-sm)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '6px 6px 18px 6px' }}>{panel}</div>
+            </div>
+        );
+
+        window.__STAGES = window.__STAGES || {};
+        const STAGES = window.__STAGES;
+        window.registerStages = (lId, arr) => { STAGES[lId] = arr; };
+
+        const LessonStage = ({ lesson, prog, onExit }) => {
+            const [stageIdx, setStageIdx] = useState(0);
+            const [done, setDone] = useState({});
+            const stages = STAGES[lesson.id] || [];
+            const Stage = stages[stageIdx];
+            const stageTitle = lesson.stages[stageIdx] || '';
+            const setComplete = useCallback(() => setDone(p => ({ ...p, [stageIdx]: true })), [stageIdx]);
+            const canNext = !!done[stageIdx];
+
+            const handleNext = () => {
+                prog.markSealed(lesson.id, stageIdx);
+                if (stageIdx < stages.length - 1) setStageIdx(stageIdx + 1);
+                else { if (window.confetti) window.confetti({ particleCount: 280, spread: 115, origin: { y: 0.55 } }); setTimeout(onExit, 1300); }
+            };
+            const handlePrev = () => stageIdx > 0 && setStageIdx(stageIdx - 1);
+            const handleJump = (i) => {
+                if (i === stageIdx) return;
+                if (i < stageIdx || done[i] || prog.isSealed(lesson.id, i)) setStageIdx(i);
+            };
+
+            return (
+                <Fragment>
+                    <div className="page">
+                        <LessonHeader lesson={lesson} stageIdx={stageIdx} totalStages={Math.max(1, stages.length)} stageTitle={stageTitle || '준비 중'} onExit={onExit} />
+                        {Stage
+                            ? <Stage key={stageIdx} lesson={lesson} onComplete={setComplete} />
+                            : <main className="page-main" style={{ display: 'grid', placeItems: 'center' }}><div className="surface-soft px-6 py-4">곧 추가됩니다.</div></main>
+                        }
+                        <LessonFooter lesson={lesson} stageIdx={stageIdx} totalStages={stages.length}
+                            canNext={canNext} onPrev={handlePrev} onNext={handleNext}
+                            nextLabel={stageIdx === stages.length - 1 ? '★ 별 받고 공방으로 →' : '다음 →'}
+                            doneArr={done} />
+                    </div>
+                    <SideTabs stages={lesson.stages} currentIdx={stageIdx} doneArr={done} onJump={handleJump}
+                        color={lesson.color} deep={lesson.deep} />
+                </Fragment>
+            );
+        };
+
+        const App = () => {
+            const names = useNames();
+            const prog = useProgress();
+            const [view, setView] = useState('name');
+            const [studentName, setStudentName] = useState("");
+            const [lessonId, setLessonId] = useState(null);
+            const lesson = LESSONS.find(l => l.id === lessonId);
+
+            return (
+                <div className="book-frame">
+                    <div className="book">
+                        {view === 'name' && <NameStage names={names} onEnter={n => { setStudentName(n); setView('home'); }} />}
+                        {view === 'home' && <HomeStage studentName={studentName} prog={prog}
+                            onPick={(id) => { setLessonId(id); setView('lesson'); }}
+                            onChangeName={() => setView('name')}
+                            onReset={() => { if (confirm('진도를 초기화할까요?')) prog.reset(); }} />}
+                        {view === 'lesson' && lesson && <LessonStage lesson={lesson} prog={prog} onExit={() => setView('home')} />}
+                    </div>
+                </div>
+            );
+        };
+
+        window.SHELL = { Says, Discover, Hint, InteractiveShape, StageBody, Split, useSvgCoord, Mascot, LESSONS };
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+        const { Says, Discover, Hint, InteractiveShape, StageBody, Split, useSvgCoord, Mascot } = window.SHELL;
+
+        const C1 = ({ lesson, onComplete }) => {
+            const [step, setStep] = useState(0);
+            useEffect(() => { if (step >= 2) onComplete(); }, [step]);
+            const VBW = 760, VBH = 480;
+            const REF = { x: 170, y: 360 };
+            const MOV_START = { x: 520, y: 180 };
+            const PTS = '0,0 220,0 110,-170';
+            const moved = step >= 1;
+            return (
+                <StageBody>
+                    <div className="h-full w-full grid items-center min-h-0 md:grid-cols-[1.4fr_1fr] grid-cols-1" style={{ gap: 'var(--gap-md)' }}>
+                        <div className="surface min-h-0 h-full grid place-items-center" style={{ padding: '0.8rem' }}>
+                            <svg viewBox={`0 0 ${VBW} ${VBH}`} className="w-full h-full">
+                                <defs>
+                                    <pattern id="c1g" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M 26 0 L 0 0 0 26" fill="none" stroke="var(--line-soft)" strokeWidth="0.8" /></pattern>
+                                </defs>
+                                <rect width={VBW} height={VBH} fill="url(#c1g)" />
+                                <g transform={`translate(${REF.x},${REF.y})`}>
+                                    <polygon points={PTS} fill={lesson.light} stroke={lesson.deep} strokeWidth="4" strokeLinejoin="round" />
+                                </g>
+                                <g style={{
+                                    transform: moved ? `translate(${REF.x}px, ${REF.y}px) rotate(0deg)` : `translate(${MOV_START.x}px, ${MOV_START.y}px) rotate(28deg)`,
+                                    transition: 'transform 1.7s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    transformOrigin: '0 0'
+                                }}>
+                                    <polygon points={PTS} fill={moved ? 'rgba(255,123,83,0.55)' : lesson.light}
+                                        stroke={lesson.deep} strokeWidth="4" strokeLinejoin="round" />
+                                </g>
+                                {step >= 2 && <text x={VBW / 2} y={VBH - 18} textAnchor="middle" fontSize="22" fill={lesson.deep} fontWeight="800">완전히 겹쳤어요!</text>}
+                            </svg>
+                        </div>
+                        <div className="flex flex-col min-h-0 justify-center" style={{ gap: 'var(--gap-md)' }}>
+                            <Says color={lesson.deep}>
+                                이 두 도형은 모양과 크기가 같을까요? <span className={lesson.hlClass}>직접 포개봐요!</span>
+                            </Says>
+                            {step === 0 && (
+                                <button onClick={() => { setStep(1); setTimeout(() => setStep(2), 1800); }}
+                                    className="btn btn-primary self-start" style={{ background: lesson.color }}>포개봐요 →</button>
+                            )}
+                            {step >= 2 && (
+                                <Discover>
+                                    모양과 크기가 모두 같은 도형을 <span className={lesson.hlClass}>합동</span>이라고 해요.
+                                </Discover>
+                            )}
+                        </div>
+                    </div>
+                </StageBody>
+            );
+        };
+
+        const C2 = ({ lesson, onComplete }) => {
+            const VBW = 760, VBH = 480;
+            const PAIRS = [
+                { ref: { pts: '0,0 150,0 75,-115', x: 200, y: 340 }, mov: { pts: '0,0 150,0 75,-115', sx: 560, sy: 170, sr: 35 }, sym: true,  why: '모양과 크기가 같아서 합동이에요.' },
+                { ref: { pts: '-70,-50 70,-50 70,50 -70,50', x: 200, y: 280 }, mov: { pts: '-70,-50 70,-50 70,50 -70,50', sx: 560, sy: 280, sr: 20 }, sym: true, why: '돌리면 딱 겹쳐요. 합동입니다.' },
+                { ref: { pts: '0,0 150,0 75,-115', x: 200, y: 340 }, mov: { pts: '0,0 95,0 48,-73', sx: 560, sy: 300, sr: 0 }, sym: false, why: '모양은 같지만 크기가 달라요.' },
+                { ref: { pts: '-60,-45 60,-45 85,45 -85,45', x: 200, y: 280 }, mov: { pts: '-70,-50 70,-50 70,50 -70,50', sx: 560, sy: 280, sr: 0 }, sym: false, why: '한쪽은 사다리꼴, 한쪽은 직사각형.' }
+            ];
+            const [idx, setIdx] = useState(0);
+            const [pos, setPos] = useState({ x: PAIRS[0].mov.sx, y: PAIRS[0].mov.sy });
+            const [rot, setRot] = useState(PAIRS[0].mov.sr);
+            const [verdict, setVerdict] = useState(null);
+            const [done, setDone] = useState({});
+            const svgRef = useRef(null);
+            const cur = PAIRS[idx];
+
+            useEffect(() => {
+                setPos({ x: cur.mov.sx, y: cur.mov.sy }); setRot(cur.mov.sr); setVerdict(null);
+            }, [idx]);
+
+            const dist = Math.hypot(pos.x - cur.ref.x, pos.y - cur.ref.y);
+            const rotN = ((rot % 360) + 360) % 360;
+            const rDiff = Math.min(rotN, 360 - rotN);
+            const auto = cur.sym && dist < 38 && rDiff < 18;
+            useEffect(() => {
+                if (auto && !verdict) {
+                    setPos({ x: cur.ref.x, y: cur.ref.y }); setRot(0);
+                    setVerdict('yes');
+                    setDone(d => ({ ...d, [idx]: true }));
+                    if (window.confetti) window.confetti({ particleCount: 60, spread: 50, origin: { y: 0.5 } });
+                }
+            }, [auto]);
+
+            const claim = (kind) => {
+                if (kind === 'sym' && cur.sym) { setVerdict('yes'); setDone(d => ({ ...d, [idx]: true })); }
+                else if (kind === 'asym' && !cur.sym) { setVerdict('no'); setDone(d => ({ ...d, [idx]: true })); }
+                else setVerdict(kind === 'sym' ? 'wrong-sym' : 'wrong-asym');
+            };
+
+            const allDone = Object.keys(done).length === PAIRS.length;
+            useEffect(() => { if (allDone) onComplete(); }, [allDone]);
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg ref={svgRef} viewBox={`0 0 ${VBW} ${VBH}`} className="w-full h-full">
+                                <defs><pattern id="c2g" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="var(--line-soft)" strokeWidth="0.8" /></pattern></defs>
+                                <rect width={VBW} height={VBH} fill="url(#c2g)" />
+                                <g transform={`translate(${cur.ref.x},${cur.ref.y})`}>
+                                    <polygon points={cur.ref.pts} fill={lesson.light} stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" />
+                                    <text x="0" y="70" textAnchor="middle" fontSize="15" fill={lesson.deep}>기준 도형</text>
+                                </g>
+                                <InteractiveShape svgRef={svgRef} poly={cur.mov.pts}
+                                    pos={pos} setPos={setPos} rot={rot} setRot={setRot}
+                                    fill={verdict === 'yes' ? 'var(--ok-lt)' : 'rgba(255,123,83,0.4)'}
+                                    stroke={verdict === 'yes' ? 'var(--ok)' : lesson.color}
+                                    handleDist={95} color={lesson.color} />
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <Says color={lesson.deep}>
+                                <b className="ff-display">도형 {idx + 1}</b>: 이 두 도형은 <span className={lesson.hlClass}>합동</span>일까요?
+                            </Says>
+                            {!verdict && (
+                                <Hint>✋ 도형 본체를 끌면 <b>이동</b> · ↻ 손잡이를 잡고 끌면 <b>회전</b></Hint>
+                            )}
+                            {!verdict && (
+                                <div className="grid grid-cols-2" style={{ gap: 'var(--gap-sm)' }}>
+                                    <button onClick={() => claim('sym')} className="btn btn-primary" style={{ background: 'var(--ok)' }}>✓ 합동이에요</button>
+                                    <button onClick={() => claim('asym')} className="btn btn-primary" style={{ background: 'var(--warn)' }}>✗ 합동 아니에요</button>
+                                </div>
+                            )}
+                            {verdict === 'yes' && <Discover>합동! {cur.why}</Discover>}
+                            {verdict === 'no' && <Discover>맞아요. {cur.why}</Discover>}
+                            {verdict === 'wrong-sym' && <Hint color="var(--warn)">자세히 봐요. 모양이나 크기가 달라요. <button onClick={() => setVerdict(null)} className="underline ml-1">다시</button></Hint>}
+                            {verdict === 'wrong-asym' && <Hint color="var(--warn)">옮기고 돌리면 포갤 수 있어요. <button onClick={() => setVerdict(null)} className="underline ml-1">다시</button></Hint>}
+                            {done[idx] && idx < PAIRS.length - 1 && (
+                                <button onClick={() => setIdx(idx + 1)} className="btn btn-primary" style={{ background: lesson.color }}>다음 도형 →</button>
+                            )}
+                            <div className="surface" style={{ padding: '0.5rem 0.9rem' }}>
+                                <div className="t-xs ff-display" style={{ color: 'var(--ink-3)' }}>진행</div>
+                                <div className="flex gap-1 mt-1">
+                                    {PAIRS.map((_, i) => <span key={i} className="flex-1 rounded-full"
+                                        style={{ height: '8px', background: done[i] ? 'var(--ok)' : (i === idx ? lesson.color : 'var(--ink-soft)') }} />)}
+                                </div>
+                            </div>
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        const C3 = ({ lesson, onComplete }) => {
+            const [act, setAct] = useState(null);
+            const [found, setFound] = useState({});
+            const mark = (k) => { setAct(k); setFound(f => ({ ...f, [k]: true })); };
+            const allDone = ['pt', 'side', 'ang'].every(k => found[k]);
+            useEffect(() => { if (allDone) onComplete(); }, [allDone]);
+
+            const PC = ['#E11D48', '#2563EB', '#059669'];
+            const SC = ['#F59E0B', '#7C3AED', '#0EA5E9'];
+
+            const L = [
+                { x: 110, y: 290, lbl: 'ㄱ' },
+                { x: 300, y: 290, lbl: 'ㄴ' },
+                { x: 205, y: 80,  lbl: 'ㄷ' }
+            ];
+            const R = [
+                { x: 430, y: 290, lbl: 'ㄹ' },
+                { x: 620, y: 290, lbl: 'ㅁ' },
+                { x: 525, y: 80,  lbl: 'ㅂ' }
+            ];
+            const SIDES = [[0, 1], [1, 2], [2, 0]];
+
+            const arcPath = (v, p1, p2, r) => {
+                const a1 = Math.atan2(p1.y - v.y, p1.x - v.x);
+                const a2 = Math.atan2(p2.y - v.y, p2.x - v.x);
+                let diff = a2 - a1;
+                while (diff > Math.PI) diff -= 2 * Math.PI;
+                while (diff < -Math.PI) diff += 2 * Math.PI;
+                const sweep = diff > 0 ? 1 : 0;
+                const sx = v.x + r * Math.cos(a1), sy = v.y + r * Math.sin(a1);
+                const ex = v.x + r * Math.cos(a2), ey = v.y + r * Math.sin(a2);
+                return `M ${v.x} ${v.y} L ${sx} ${sy} A ${r} ${r} 0 0 ${sweep} ${ex} ${ey} Z`;
+            };
+
+            const Shape = ({ pts }) => (
+                <g>
+                    <polygon points={pts.map(p => `${p.x},${p.y}`).join(' ')}
+                        fill={lesson.light} stroke={lesson.deep} strokeWidth="4" strokeLinejoin="round" />
+                    {act === 'ang' && pts.map((v, i) => {
+                        const p1 = pts[(i + 1) % 3], p2 = pts[(i + 2) % 3];
+                        return <path key={`a-${i}`} d={arcPath(v, p1, p2, 30)}
+                            fill={PC[i]} fillOpacity="0.35"
+                            stroke={PC[i]} strokeWidth="2.5" />;
+                    })}
+                    {SIDES.map(([a, b], i) => {
+                        const p1 = pts[a], p2 = pts[b];
+                        return <line key={`s-${i}`} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+                            stroke={act === 'side' ? SC[i] : 'transparent'} strokeWidth="7" strokeLinecap="round" />;
+                    })}
+                    {pts.map((p, i) => (
+                        <g key={`p-${i}`}>
+                            <circle cx={p.x} cy={p.y} r={act === 'pt' ? 13 : 7}
+                                fill={act === 'pt' ? PC[i] : lesson.deep}
+                                stroke="white" strokeWidth="3" />
+                            <text x={p.x - 26} y={p.y + 7} fontSize="20" fontWeight="800"
+                                fill={act === 'pt' ? PC[i] : lesson.deep}>{p.lbl}</text>
+                        </g>
+                    ))}
+                </g>
+            );
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg viewBox="0 0 740 380" className="w-full h-full">
+                                <Shape pts={L} />
+                                <Shape pts={R} />
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <Says color={lesson.deep}>
+                                두 도형은 <span className={lesson.hlClass}>합동</span>이에요.<br />
+                                아래 단추를 차례로 눌러 짝꿍을 찾아봐요.
+                            </Says>
+                            <div className="grid gap-2">
+                                <button onClick={() => mark('pt')}
+                                    className="btn btn-soft" style={{ justifyContent: 'space-between', borderColor: found.pt ? PC[0] : 'var(--line-soft)', borderWidth: '2.5px' }}>
+                                    <span>● 대응점 보기</span>{found.pt && <span style={{ color: PC[0] }}>✓</span>}
+                                </button>
+                                <button onClick={() => mark('side')}
+                                    className="btn btn-soft" style={{ justifyContent: 'space-between', borderColor: found.side ? SC[0] : 'var(--line-soft)', borderWidth: '2.5px' }}>
+                                    <span>━ 대응변 보기</span>{found.side && <span style={{ color: SC[0] }}>✓</span>}
+                                </button>
+                                <button onClick={() => mark('ang')}
+                                    className="btn btn-soft" style={{ justifyContent: 'space-between', borderColor: found.ang ? PC[1] : 'var(--line-soft)', borderWidth: '2.5px' }}>
+                                    <span>◜ 대응각 보기</span>{found.ang && <span style={{ color: PC[1] }}>✓</span>}
+                                </button>
+                            </div>
+                            {allDone && (
+                                <Discover>
+                                    같은 색끼리 <span className={lesson.hlClass}>대응점·대응변·대응각</span>이에요. 대응변 길이와 대응각 크기는 모두 같답니다.
+                                </Discover>
+                            )}
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        const C4 = ({ lesson, onComplete }) => {
+            const [measured, setMeasured] = useState({});
+            const all = ['side1', 'side2', 'angle'].every(k => measured[k]);
+            useEffect(() => { if (all) onComplete(); }, [all]);
+            const measure = (k) => setMeasured(m => ({ ...m, [k]: true }));
+
+            // 직각이 ㄱ(좌하)에 오도록 배치
+            // ㄱ: 좌하(직각), ㄴ: 좌상, ㄷ: 우하 — 두 직각변은 ㄱㄴ(수직) & ㄱㄷ(수평)
+            const L = { A: { x: 110, y: 250 }, B: { x: 110, y: 90 }, C: { x: 300, y: 250 } };
+            const R = { A: { x: 430, y: 250 }, B: { x: 430, y: 90 }, C: { x: 620, y: 250 } };
+            const LBLS = [['ㄱ', 'ㄴ', 'ㄷ'], ['ㄹ', 'ㅁ', 'ㅂ']];
+
+            const Shape = ({ pts, labels }) => {
+                const { A, B, C } = pts;
+                return (
+                    <g>
+                        <polygon points={`${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y}`}
+                            fill={lesson.light} stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" />
+
+                        {/* 변 ㄱㄴ (수직, 도형 왼쪽 바깥) — 8cm */}
+                        {measured.side1 && (
+                            <Fragment>
+                                <line x1={A.x - 16} y1={A.y} x2={A.x - 16} y2={B.y} stroke={lesson.color} strokeWidth="2.5" />
+                                <line x1={A.x - 22} y1={A.y} x2={A.x - 10} y2={A.y} stroke={lesson.color} strokeWidth="2.5" />
+                                <line x1={A.x - 22} y1={B.y} x2={A.x - 10} y2={B.y} stroke={lesson.color} strokeWidth="2.5" />
+                                <text x={A.x - 26} y={(A.y + B.y) / 2 + 5} fontSize="16" fill={lesson.deep} textAnchor="end">8cm</text>
+                            </Fragment>
+                        )}
+
+                        {/* 변 ㄱㄷ (수평, 도형 아래) — 9.5cm */}
+                        {measured.side2 && (
+                            <Fragment>
+                                <line x1={A.x} y1={A.y + 16} x2={C.x} y2={A.y + 16} stroke={lesson.color} strokeWidth="2.5" />
+                                <line x1={A.x} y1={A.y + 10} x2={A.x} y2={A.y + 22} stroke={lesson.color} strokeWidth="2.5" />
+                                <line x1={C.x} y1={A.y + 10} x2={C.x} y2={A.y + 22} stroke={lesson.color} strokeWidth="2.5" />
+                                <text x={(A.x + C.x) / 2} y={A.y + 36} fontSize="16" fill={lesson.deep} textAnchor="middle">9.5cm</text>
+                            </Fragment>
+                        )}
+
+                        {/* 각 ㄱ — 직각 표시 (작은 사각형) at A: 위·오른쪽으로 */}
+                        {measured.angle && (
+                            <Fragment>
+                                <path d={`M ${A.x} ${A.y - 22} L ${A.x + 22} ${A.y - 22} L ${A.x + 22} ${A.y}`}
+                                    fill="none" stroke="var(--c-pt)" strokeWidth="2.5" />
+                                <text x={A.x + 28} y={A.y - 8} fontSize="15" fill="var(--c-pt-dp)" fontWeight="700">90°</text>
+                            </Fragment>
+                        )}
+
+                        {/* 꼭짓점 + 라벨 */}
+                        <circle cx={A.x} cy={A.y} r="5" fill={lesson.deep} />
+                        <text x={A.x - 18} y={A.y + 22} fontSize="16" fill={lesson.deep}>{labels[0]}</text>
+                        <circle cx={B.x} cy={B.y} r="5" fill={lesson.deep} />
+                        <text x={B.x - 18} y={B.y - 8} fontSize="16" fill={lesson.deep}>{labels[1]}</text>
+                        <circle cx={C.x} cy={C.y} r="5" fill={lesson.deep} />
+                        <text x={C.x + 8} y={C.y + 22} fontSize="16" fill={lesson.deep}>{labels[2]}</text>
+                    </g>
+                );
+            };
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg viewBox="0 0 720 360" className="w-full h-full">
+                                <Shape pts={L} labels={LBLS[0]} />
+                                <Shape pts={R} labels={LBLS[1]} />
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <Says color={lesson.deep}>
+                                두 합동 도형의 <span className={lesson.hlClass}>대응변</span>과 <span className="hl-y">대응각</span>을 재봅시다.
+                            </Says>
+                            <div className="grid gap-2">
+                                <button onClick={() => measure('side1')} disabled={measured.side1}
+                                    className="btn btn-soft" style={{ fontFamily: 'Gowun Dodum', justifyContent: 'flex-start' }}>
+                                    📏 변 ㄱㄴ과 ㄹㅁ 재기 {measured.side1 && '✓'}
+                                </button>
+                                <button onClick={() => measure('side2')} disabled={measured.side2}
+                                    className="btn btn-soft" style={{ fontFamily: 'Gowun Dodum', justifyContent: 'flex-start' }}>
+                                    📏 변 ㄱㄷ과 ㄹㅂ 재기 {measured.side2 && '✓'}
+                                </button>
+                                <button onClick={() => measure('angle')} disabled={measured.angle}
+                                    className="btn btn-soft" style={{ fontFamily: 'Gowun Dodum', justifyContent: 'flex-start' }}>
+                                    📐 각 ㄱ과 ㄹ 재기 {measured.angle && '✓'}
+                                </button>
+                            </div>
+                            {all && (
+                                <Discover>
+                                    합동인 두 도형은 <span className={lesson.hlClass}>대응변의 길이</span>가 같고 <span className="hl-y">대응각의 크기</span>도 같아요!
+                                </Discover>
+                            )}
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        const C5 = ({ lesson, onComplete }) => {
+            const G = 40, COLS = 16, ROWS = 9;
+            const VBW = COLS * G, VBH = ROWS * G;
+            const PROBS = [
+                { ref: [{ x: 11, y: 7 }, { x: 14, y: 7 }, { x: 11, y: 4 }], name: '직각삼각형' },
+                { ref: [{ x: 11, y: 7 }, { x: 15, y: 7 }, { x: 13, y: 4 }], name: '이등변삼각형' },
+                { ref: [{ x: 11, y: 4 }, { x: 14, y: 4 }, { x: 14, y: 8 }], name: '뒤집힌 직각삼각형' },
+                { ref: [{ x: 10, y: 7 }, { x: 15, y: 7 }, { x: 11, y: 3 }], name: '일반 삼각형' },
+                { ref: [{ x: 11, y: 6 }, { x: 14, y: 8 }, { x: 14, y: 4 }], name: '비스듬한 삼각형' },
+            ];
+            const [pIdx, setPIdx] = useState(0);
+            const REF = PROBS[pIdx].ref;
+            const svgRef = useRef(null);
+            const toCoord = useSvgCoord(svgRef);
+            const sideLen = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+            const refSides = [sideLen(REF[0], REF[1]), sideLen(REF[1], REF[2]), sideLen(REF[2], REF[0])].sort((a, b) => a - b);
+
+            const [phase, setPhase] = useState(0);
+            const [pts, setPts] = useState([]);
+            const [pos, setPos] = useState({ x: 0, y: 0 });
+            const [rot, setRot] = useState(0);
+
+            const stuSides = pts.length === 3 ? [sideLen(pts[0], pts[1]), sideLen(pts[1], pts[2]), sideLen(pts[2], pts[0])].sort((a, b) => a - b) : null;
+            const sidesMatch = stuSides && stuSides.every((v, i) => Math.abs(v - refSides[i]) < 0.001);
+
+            const onClick = (e) => {
+                if (phase !== 1 || pts.length >= 3) return;
+                const c = toCoord(e); if (!c) return;
+                const gx = Math.round(c.x / G), gy = Math.round(c.y / G);
+                if (gx < 1 || gx > 9 || gy < 1 || gy > ROWS - 1) return;
+                setPts(p => [...p, { x: gx, y: gy }]);
+            };
+
+            const stuCent = pts.length === 3 ? { x: (pts[0].x + pts[1].x + pts[2].x) / 3 * G, y: (pts[0].y + pts[1].y + pts[2].y) / 3 * G } : null;
+            const refPx = REF.map(p => ({ x: p.x * G, y: p.y * G }));
+            const rotPt = (p, cx, cy, d) => { const r = d * Math.PI / 180; return { x: cx + (p.x - cx) * Math.cos(r) - (p.y - cy) * Math.sin(r), y: cy + (p.x - cx) * Math.sin(r) + (p.y - cy) * Math.cos(r) }; };
+            const tPts = pts.length === 3 ? pts.map(p => {
+                const r = rotPt({ x: p.x * G, y: p.y * G }, stuCent.x, stuCent.y, rot);
+                return { x: r.x + pos.x, y: r.y + pos.y };
+            }) : [];
+            const matchScore = pts.length === 3 ? refPx.map(r => Math.min(...tPts.map(c => Math.hypot(r.x - c.x, r.y - c.y)))).reduce((a, b) => Math.max(a, b), 0) : Infinity;
+            const overlapped = phase === 2 && matchScore < 22;
+            const isLast = pIdx === PROBS.length - 1;
+            useEffect(() => { if (overlapped && isLast) setTimeout(onComplete, 1300); }, [overlapped, isLast]);
+
+            const nextProblem = () => {
+                setPIdx(pIdx + 1);
+                setPts([]); setPos({ x: 0, y: 0 }); setRot(0); setPhase(1);
+            };
+
+            const refPoly = REF.map(p => `${p.x * G},${p.y * G}`).join(' ');
+            const stuPoly = pts.length === 3 ? pts.map(p => `${p.x * G},${p.y * G}`).join(' ') : null;
+
+            if (phase === 0) {
+                return (
+                    <main className="page-main page-pad" style={{ display: 'grid', placeItems: 'center' }}>
+                        <div className="surface max-w-2xl text-center" style={{ padding: 'clamp(1.5rem,3vw,2.5rem)' }}>
+                            <Mascot size={88} />
+                            <div className="ff-display t-xl mt-3 mb-2" style={{ color: lesson.deep }}>이제 네 차례야!</div>
+                            <p className="t-base mb-5" style={{ color: 'var(--ink-2)' }}>
+                                <b className={lesson.hlClass}>5개의 기준 도형</b>과 합동인 도형을 차례로 그려요. <span className="hl">포개봐</span> 확인!
+                            </p>
+                            <button onClick={() => setPhase(1)} className="btn btn-primary" style={{ background: lesson.color }}>그리기 시작 →</button>
+                        </div>
+                    </main>
+                );
+            }
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg ref={svgRef} viewBox={`0 0 ${VBW} ${VBH}`} className={`w-full h-full ${phase === 1 ? 'cursor-crosshair' : ''}`} onClick={onClick}>
+                                <defs><pattern id="c5g" width={G} height={G} patternUnits="userSpaceOnUse"><path d={`M ${G} 0 L 0 0 0 ${G}`} fill="none" stroke="var(--line-soft)" strokeWidth="0.8" /></pattern></defs>
+                                <rect width={VBW} height={VBH} fill="url(#c5g)" />
+                                <line x1={10 * G} y1="0" x2={10 * G} y2={VBH} stroke="var(--ink-soft)" strokeWidth="1.5" strokeDasharray="6,4" />
+                                <text x={2 * G} y={G * 0.65} fontSize="14" fill="var(--ink-3)">너의 도형</text>
+                                <text x={11 * G} y={G * 0.65} fontSize="14" fill="var(--ink-3)">기준 도형</text>
+
+                                <polygon points={refPoly} fill={lesson.light} stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" />
+                                {phase === 1 && (
+                                    <Fragment>
+                                        <text x={14 * G} y={8.5 * G} fontSize="14" fill={lesson.deep} textAnchor="middle">{refSides[2].toFixed(0)}칸</text>
+                                        <text x={11.3 * G} y={6.6 * G} fontSize="14" fill={lesson.deep}>{sideLen(REF[0], REF[2]).toFixed(0)}칸</text>
+                                    </Fragment>
+                                )}
+
+                                {phase === 1 && pts.map((p, i) => (
+                                    <circle key={i} cx={p.x * G} cy={p.y * G} r="7" fill={sidesMatch ? 'var(--ok)' : lesson.color} stroke="white" strokeWidth="2.5" />
+                                ))}
+                                {phase === 1 && pts.length === 3 && (
+                                    <polygon points={stuPoly} fill={sidesMatch ? 'rgba(26,184,155,0.2)' : 'rgba(255,123,83,0.25)'}
+                                        stroke={sidesMatch ? 'var(--ok)' : lesson.color} strokeWidth="3.5" strokeLinejoin="round" />
+                                )}
+
+                                {phase === 2 && pts.length === 3 && (
+                                    <InteractiveShape svgRef={svgRef} poly={stuPoly}
+                                        pos={pos} setPos={setPos} rot={rot} setRot={setRot}
+                                        fill={overlapped ? 'var(--ok-lt)' : 'rgba(255,123,83,0.5)'}
+                                        stroke={overlapped ? 'var(--ok)' : lesson.color}
+                                        handleDist={75} color={lesson.color} />
+                                )}
+                                {phase === 2 && overlapped && (
+                                    <text x={VBW / 2} y={VBH - 12} textAnchor="middle" fontSize="22" fontWeight="800" fill="var(--ok)">✨ 합동 확인!</text>
+                                )}
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <div className="surface" style={{ padding: '0.5rem 0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                                <span className="ff-display t-sm" style={{ color: 'var(--ink-3)' }}>문제 <b style={{color: lesson.deep, fontSize:'1.1em'}}>{pIdx + 1}</b> / {PROBS.length}</span>
+                                <span className="t-sm" style={{ color: lesson.deep }}>{PROBS[pIdx].name}</span>
+                            </div>
+                            {phase === 1 && (
+                                <Fragment>
+                                    <Says color={lesson.deep}>
+                                        {pts.length === 0 && <Fragment>왼쪽 빈 칸에 <b className={lesson.hlClass}>점 3개</b>를 차례로 찍어 같은 모양의 삼각형을 그려요.</Fragment>}
+                                        {pts.length > 0 && pts.length < 3 && <Fragment>좋아요! 다음 점을 변 길이에 맞춰 찍어요. ({pts.length}/3)</Fragment>}
+                                        {pts.length === 3 && sidesMatch && <Fragment>잘 그렸어요! 이제 <span className="hl">포개봐</span> 확인.</Fragment>}
+                                        {pts.length === 3 && !sidesMatch && <Fragment>변 길이가 달라요. 다시 그려요.</Fragment>}
+                                    </Says>
+                                    {pts.length === 3 && stuSides && (
+                                        <div className="surface" style={{ padding: '0.5rem 0.9rem' }}>
+                                            <div className="t-sm ff-display mb-1" style={{ color: 'var(--ink-3)' }}>변 길이 비교</div>
+                                            {refSides.map((rs, i) => {
+                                                const ok = Math.abs(stuSides[i] - rs) < 0.001;
+                                                return <div key={i} className="flex justify-between t-sm" style={{ color: ok ? 'var(--ok)' : 'var(--warn)' }}>
+                                                    <span>변 {i + 1}</span><span>{rs.toFixed(1)} ↔ {stuSides[i].toFixed(1)} {ok ? '✓' : '✗'}</span>
+                                                </div>;
+                                            })}
+                                        </div>
+                                    )}
+                                    {pts.length === 3 && (
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setPts([])} className="btn btn-soft flex-1">다시 그리기</button>
+                                            {sidesMatch && <button onClick={() => { setPos({ x: 0, y: 0 }); setRot(0); setPhase(2); }} className="btn btn-primary flex-1" style={{ background: lesson.color }}>포개기 →</button>}
+                                        </div>
+                                    )}
+                                </Fragment>
+                            )}
+                            {phase === 2 && (
+                                <Says color={lesson.deep}>
+                                    {!overlapped && <Fragment>이제 기준 도형 위에 포개봐요!</Fragment>}
+                                    {overlapped && !isLast && <Fragment>✨ 합동 확인! 다음 문제로!</Fragment>}
+                                    {overlapped && isLast && <Fragment>✨ 5문제 모두 완성! 합동 마스터!</Fragment>}
+                                </Says>
+                            )}
+                            {phase === 2 && !overlapped && (
+                                <Hint>✋ 도형 본체를 끌면 <b>이동</b> · ↻ 손잡이를 끌면 <b>회전</b></Hint>
+                            )}
+                            {phase === 2 && overlapped && !isLast && (
+                                <button onClick={nextProblem} className="btn btn-primary" style={{ background: lesson.color }}>다음 문제 →</button>
+                            )}
+                            {phase === 2 && overlapped && isLast && <Discover>5개 도형 모두 합동으로 그렸어요! <span className={lesson.hlClass}>합동의 뜻</span> 그대로!</Discover>}
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        window.registerStages('cong', [C1, C2, C3, C4, C5]);
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useId, useCallback } = React;
+        const { Says, Discover, Hint, StageBody, Split, useSvgCoord, Mascot } = window.SHELL;
+
+        const L1 = ({ lesson, onComplete }) => {
+            const [folded, setFolded] = useState(false);
+            useEffect(() => { if (folded) setTimeout(onComplete, 800); }, [folded]);
+            const VBW = 480, VBH = 320, AX = 240;
+            const FULL = '120,80 360,80 360,220 240,260 120,220';
+            return (
+                <StageBody>
+                    <div className="h-full w-full grid items-center min-h-0 md:grid-cols-2 grid-cols-1" style={{ gap: 'var(--gap-md)' }}>
+                        <div className="surface min-h-0 h-full grid place-items-center" style={{ padding: '1rem' }}>
+                            <svg viewBox={`0 0 ${VBW} ${VBH}`} className="w-full h-full" style={{ maxHeight: 'min(62vh, 600px)' }}>
+                                <defs>
+                                    <clipPath id="l1-left"><rect x="0" y="0" width={AX} height={VBH} /></clipPath>
+                                    <clipPath id="l1-right"><rect x={AX} y="0" width={VBW - AX} height={VBH} /></clipPath>
+                                </defs>
+                                <g clipPath="url(#l1-left)">
+                                    <polygon points={FULL} fill={lesson.light} stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" />
+                                </g>
+                                <g style={{
+                                    transform: folded ? `matrix(-1, 0, 0, 1, ${2 * AX}, 0)` : 'matrix(1, 0, 0, 1, 0, 0)',
+                                    transition: 'transform 1.6s cubic-bezier(0.5, 0, 0.3, 1)'
+                                }}>
+                                    <g clipPath="url(#l1-right)">
+                                        <polygon points={FULL} fill={lesson.light} fillOpacity={folded ? 0.55 : 1}
+                                            stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" />
+                                    </g>
+                                </g>
+                                <line x1={AX} y1="40" x2={AX} y2={VBH - 30} stroke={lesson.color} strokeWidth="2" strokeDasharray="5,3" />
+                                <text x={AX} y="30" textAnchor="middle" fontSize="14" fill={lesson.deep}>대칭축</text>
+                            </svg>
+                        </div>
+                        <div className="flex flex-col min-h-0 justify-center" style={{ gap: 'var(--gap-md)' }}>
+                            <Says color={lesson.deep}>
+                                이 도형을 <span className={lesson.hlClass}>대칭축</span>을 따라 접어볼까요?
+                            </Says>
+                            {!folded && (
+                                <button onClick={() => setFolded(true)} className="btn btn-primary self-start" style={{ background: lesson.color }}>접어봐요 →</button>
+                            )}
+                            {folded && (
+                                <Discover>
+                                    한 직선을 따라 접었을 때 양쪽이 완전히 겹치는 도형을 <span className={lesson.hlClass}>선대칭 도형</span>이라고 해요.
+                                    이때 그 직선을 <span className="hl-y">대칭축</span>이라고 합니다.
+                                </Discover>
+                            )}
+                        </div>
+                    </div>
+                </StageBody>
+            );
+        };
+
+        const FoldSvg = ({ poly, axisX, w, h, folded }) => {
+            const id = useId().replace(/:/g, '_');
+            return (
+                <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full">
+                    <defs>
+                        <clipPath id={`fL-${id}`}><rect x="0" y="0" width={axisX} height={h} /></clipPath>
+                        <clipPath id={`fR-${id}`}><rect x={axisX} y="0" width={w - axisX} height={h} /></clipPath>
+                    </defs>
+                    <g clipPath={`url(#fL-${id})`}>
+                        <polygon points={poly} fill="var(--c-line-lt)" stroke="var(--c-line-dp)" strokeWidth="3" strokeLinejoin="round" />
+                    </g>
+                    <g style={{
+                        transform: folded ? `matrix(-1, 0, 0, 1, ${2 * axisX}, 0)` : 'matrix(1, 0, 0, 1, 0, 0)',
+                        transition: 'transform 1.3s cubic-bezier(0.5, 0, 0.3, 1)'
+                    }}>
+                        <g clipPath={`url(#fR-${id})`}>
+                            <polygon points={poly} fill="var(--c-line-lt)" fillOpacity={folded ? 0.5 : 1} stroke="var(--c-line-dp)" strokeWidth="3" strokeLinejoin="round" />
+                        </g>
+                    </g>
+                    <line x1={axisX} y1="0" x2={axisX} y2={h} stroke="var(--c-line)" strokeWidth="2" strokeDasharray="5,3" />
+                </svg>
+            );
+        };
+
+        const L2 = ({ lesson, onComplete }) => {
+            const SHAPES = [
+                { id: 'iso',  name: '이등변삼각형', sym: true,  poly: '120,20 210,150 30,150', ax: 120 },
+                { id: 'rect', name: '직사각형',     sym: true,  poly: '30,60 210,60 210,130 30,130', ax: 120 },
+                { id: 'para', name: '평행사변형',   sym: false, poly: '40,55 190,55 200,140 50,140', ax: 120 },
+                { id: 'tri',  name: '일반 삼각형',  sym: false, poly: '30,150 210,150 60,30',       ax: 120 }
+            ];
+            const [folded, setFolded] = useState({});
+            const tested = Object.keys(folded).length;
+            useEffect(() => { if (tested === SHAPES.length) onComplete(); }, [tested]);
+            const toggle = id => setFolded(p => ({ ...p, [id]: !p[id] }));
+
+            return (
+                <StageBody>
+                    <div className="h-full w-full flex flex-col min-h-0" style={{ gap: 'var(--gap-sm)' }}>
+                        <Says color={lesson.deep}>
+                            네 도형을 모두 접어봐요. 양쪽이 <span className={lesson.hlClass}>딱 맞으면 선대칭</span>이에요. <b>({tested}/{SHAPES.length})</b>
+                        </Says>
+                        <div className="flex-1 grid min-h-0" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--gap-sm)' }}>
+                            {SHAPES.map(s => {
+                                const isF = !!folded[s.id];
+                                const ok = isF && s.sym, bad = isF && !s.sym;
+                                return (
+                                    <div key={s.id} className="surface flex flex-col" style={{ padding: '0.8rem', borderColor: ok ? 'var(--ok)' : bad ? 'var(--warn)' : 'var(--line-soft)' }}>
+                                        <div className="ff-display t-base text-center mb-1" style={{ color: 'var(--ink-2)' }}>{s.name}</div>
+                                        <div className="flex-1 min-h-0"><FoldSvg poly={s.poly} axisX={s.ax} w={240} h={180} folded={isF} /></div>
+                                        <button onClick={() => toggle(s.id)} className="btn btn-soft mt-2 w-full" style={{ color: ok ? 'var(--ok)' : bad ? 'var(--warn)' : 'var(--ink-2)' }}>
+                                            {isF ? (ok ? '✓ 딱 맞아요!' : '✗ 어긋나요') : '접어보기'}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {tested === SHAPES.length && (
+                            <Discover>
+                                양쪽이 완전히 겹치는 도형이 <span className={lesson.hlClass}>선대칭 도형</span>이에요. 평행사변형과 일반 삼각형은 어긋났지요?
+                            </Discover>
+                        )}
+                    </div>
+                </StageBody>
+            );
+        };
+
+        const L3 = ({ lesson, onComplete }) => {
+            const PROBS = [
+                { id: 'sq', name: '정사각형', want: 4, poly: '50,50 150,50 150,150 50,150',
+                  axes: [
+                    { ang: Math.PI / 2, pt: { x: 100, y: 100 } },
+                    { ang: 0,         pt: { x: 100, y: 100 } },
+                    { ang: Math.PI / 4, pt: { x: 100, y: 100 } },
+                    { ang: -Math.PI / 4, pt: { x: 100, y: 100 } }
+                  ]
+                },
+                { id: 'iso', name: '이등변삼각형', want: 1, poly: '100,30 165,150 35,150',
+                  axes: [{ ang: Math.PI / 2, pt: { x: 100, y: 100 } }]
+                },
+                { id: 'rect', name: '직사각형', want: 2, poly: '30,75 170,75 170,125 30,125',
+                  axes: [{ ang: Math.PI / 2, pt: { x: 100, y: 100 } }, { ang: 0, pt: { x: 100, y: 100 } }]
+                }
+            ];
+            const [pIdx, setPIdx] = useState(0);
+            const [drawn, setDrawn] = useState([]);
+            const [drawing, setDrawing] = useState(null);
+            const svgRef = useRef(null);
+            const toCoord = useSvgCoord(svgRef);
+            const cur = PROBS[pIdx];
+            useEffect(() => { setDrawn([]); setDrawing(null); }, [pIdx]);
+
+            const matchAxis = (a, b) => {
+                const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+                if (len < 30) return -1;                            // 너무 짧으면 제외
+                const norm = x => ((x % Math.PI) + Math.PI) % Math.PI;
+                const studentAng = norm(Math.atan2(dy, dx));
+                return cur.axes.findIndex((ax, i) => {
+                    if (drawn.some(d => d.axIdx === i)) return false;
+                    const angDiff = Math.min(Math.abs(norm(ax.ang) - studentAng), Math.PI - Math.abs(norm(ax.ang) - studentAng));
+                    if (angDiff > 0.30) return false;                // 약 17° 허용 — 눈으로 티 안 날 정도
+                    const cross = Math.abs((100 - a.x) * dy - (100 - a.y) * dx) / len;
+                    return cross < 30;                               // 도형 중심에서 30px 이내 (도형 절반 안쪽)
+                });
+            };
+
+            const onDown = (e) => {
+                const c = toCoord(e); if (!c) return;
+                setDrawing({ start: c, end: c });
+                e.preventDefault();
+            };
+            const onMove = (e) => {
+                if (!drawing) return;
+                const c = toCoord(e); if (!c) return;
+                setDrawing(d => ({ ...d, end: c }));
+            };
+            const onUp = () => {
+                if (!drawing) return;
+                const matched = matchAxis(drawing.start, drawing.end);
+                setDrawn(d => [...d, { a: drawing.start, b: drawing.end, ok: matched >= 0, axIdx: matched }]);
+                setDrawing(null);
+            };
+
+            const found = drawn.filter(d => d.ok).length;
+            const allDone = found === cur.want;
+            useEffect(() => { if (allDone && pIdx === PROBS.length - 1) onComplete(); }, [allDone, pIdx]);
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg ref={svgRef} viewBox="0 0 200 200" className="w-full h-full"
+                                style={{ cursor: 'crosshair', touchAction: 'none' }}
+                                onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
+                                onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp}>
+                                <polygon points={cur.poly} fill={lesson.light} stroke={lesson.deep} strokeWidth="3" strokeLinejoin="round" />
+                                {drawn.map((d, i) => (
+                                    <line key={i} x1={d.a.x} y1={d.a.y} x2={d.b.x} y2={d.b.y}
+                                        stroke={d.ok ? 'var(--ok)' : 'var(--warn)'} strokeWidth="2.5" strokeDasharray={d.ok ? '5,3' : '3,2'} />
+                                ))}
+                                {drawing && <line x1={drawing.start.x} y1={drawing.start.y} x2={drawing.end.x} y2={drawing.end.y} stroke={lesson.color} strokeWidth="2" strokeDasharray="3,3" />}
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <Says color={lesson.deep}>
+                                <b className="ff-display">{cur.name}</b>의 <span className={lesson.hlClass}>대칭축</span>을 모두 찾아봐요. 도형 위에 <span className="hl-y">선을 그어요</span>.
+                            </Says>
+                            <div className="surface" style={{ padding: 'clamp(0.3rem, 0.6vw, 0.5rem) clamp(0.7rem, 1.2vw, 1rem)', display:'flex', alignItems:'baseline', justifyContent:'space-between' }}>
+                                <span className="ff-display t-sm" style={{ color: 'var(--ink-3)' }}>찾은 대칭축</span>
+                                <span className="ff-display" style={{ fontSize: 'clamp(1.2rem, 1.8vw, 1.6rem)', color: lesson.deep, lineHeight: 1.1 }}>
+                                    {found} <span className="t-sm" style={{ color: 'var(--ink-3)' }}>/ {cur.want}</span>
+                                </span>
+                            </div>
+                            {allDone && pIdx < PROBS.length - 1 && (
+                                <button onClick={() => setPIdx(pIdx + 1)} className="btn btn-primary" style={{ background: lesson.color }}>다음 도형 →</button>
+                            )}
+                            {allDone && pIdx === PROBS.length - 1 && (
+                                <Discover>
+                                    <div style={{ fontSize: '0.78em', lineHeight: 1.4 }}>
+                                        도형마다 <span className={lesson.hlClass} style={{ fontSize: '1.3em' }}>대칭축 개수</span>가 달라요!
+                                    </div>
+                                    <div style={{ marginTop: '0.4rem', display: 'grid', gap: '0.2rem', fontSize: '0.78em' }}>
+                                        <div>· 정사각형 <b>4개</b></div>
+                                        <div>· 직사각형 <b>2개</b></div>
+                                        <div>· 이등변삼각형 <b>1개</b></div>
+                                    </div>
+                                </Discover>
+                            )}
+                            {drawn.length > 0 && !allDone && (
+                                <button onClick={() => setDrawn([])} className="btn btn-soft">지우고 다시</button>
+                            )}
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        const L4 = ({ lesson, onComplete }) => {
+            const VBW = 580, VBH = 340, AX = 290;
+            const LEFT = [{ x: 170, y: 80, n: 'ㄱ' }, { x: 130, y: 210, n: 'ㄴ' }, { x: 210, y: 260, n: 'ㄷ' }];
+            const mirror = p => ({ x: 2 * AX - p.x, y: p.y, n: p.n });
+            const RIGHT = [{ x: 410, y: 80, n: 'ㄹ' }, { x: 450, y: 210, n: 'ㅁ' }, { x: 370, y: 260, n: 'ㅂ' }];
+            const [explored, setExplored] = useState([]);
+            const doExp = i => { if (!explored.includes(i)) setExplored(e => [...e, i]); };
+            useEffect(() => { if (explored.length === LEFT.length) onComplete(); }, [explored]);
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg viewBox={`0 0 ${VBW} ${VBH}`} className="w-full h-full">
+                                <defs><pattern id="l4g" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M 22 0 L 0 0 0 22" fill="none" stroke="var(--line-soft)" strokeWidth="0.8" /></pattern></defs>
+                                <rect width={VBW} height={VBH} fill="url(#l4g)" />
+                                <polygon points={`${LEFT[0].x},${LEFT[0].y} ${LEFT[1].x},${LEFT[1].y} ${LEFT[2].x},${LEFT[2].y} ${RIGHT[2].x},${RIGHT[2].y} ${RIGHT[1].x},${RIGHT[1].y} ${RIGHT[0].x},${RIGHT[0].y}`}
+                                    fill={lesson.light} stroke={lesson.deep} strokeWidth="3" strokeLinejoin="round" />
+                                {LEFT.map((p, i) => {
+                                    const m = RIGHT[i], ex = explored.includes(i), d = (AX - p.x);
+                                    return (
+                                        <g key={i}>
+                                            {ex && <Fragment>
+                                                <line x1={p.x} y1={p.y} x2={m.x} y2={m.y} stroke={lesson.color} strokeWidth="2" strokeDasharray="4,3" />
+                                                <path d={`M ${AX - 10} ${p.y} L ${AX - 10} ${p.y - 10} L ${AX} ${p.y - 10}`} fill="none" stroke={lesson.deep} strokeWidth="1.5" />
+                                                <text x={(p.x + AX) / 2} y={p.y - 8} textAnchor="middle" fontSize="13" fill={lesson.deep}>{Math.round(d / 22)}칸</text>
+                                                <text x={(AX + m.x) / 2} y={p.y - 8} textAnchor="middle" fontSize="13" fill={lesson.deep}>{Math.round(d / 22)}칸</text>
+                                            </Fragment>}
+                                            <circle cx={p.x} cy={p.y} r="9" fill={ex ? lesson.deep : lesson.color} stroke="white" strokeWidth="2.5"
+                                                className={ex ? '' : 'a-ring'} style={{ cursor: 'pointer' }} onClick={() => doExp(i)} />
+                                            <text x={p.x - 22} y={p.y + 5} fontSize="14" fill={lesson.deep}>{p.n}</text>
+                                            <circle cx={m.x} cy={m.y} r="7" fill={ex ? lesson.deep : lesson.color} stroke="white" strokeWidth="2" opacity={ex ? 1 : 0.4} />
+                                            <text x={m.x + 12} y={m.y + 5} fontSize="14" fill={lesson.deep} opacity={ex ? 1 : 0.4}>{m.n}</text>
+                                        </g>
+                                    );
+                                })}
+                                {/* 대칭축 — 도형 위에 보이도록 마지막에 그림 */}
+                                <line x1={AX} y1="20" x2={AX} y2={VBH - 15} stroke={lesson.color} strokeWidth="3" strokeDasharray="7,5" />
+                                <rect x={AX - 26} y="18" width="52" height="22" rx="11" fill="white" stroke={lesson.color} strokeWidth="1.5" />
+                                <text x={AX} y="34" textAnchor="middle" fontSize="14" fontWeight="bold" fill={lesson.deep}>대칭축</text>
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <Says color={lesson.deep}>
+                                왼쪽 점 <b>ㄱ · ㄴ · ㄷ</b>을 차례로 눌러요. 대응점과 어떤 관계인지 봐봐요. <b>({explored.length}/{LEFT.length})</b>
+                            </Says>
+                            {explored.length < LEFT.length && <Hint>대칭축과 만난 자리에 <b>직각</b>이 그어지는 것을 보세요.</Hint>}
+                            {explored.length === LEFT.length && <Fragment>
+                                <Discover><div style={{ fontSize: '0.82em', lineHeight: 1.4 }}>① 대응점을 이은 선은 <span className={lesson.hlClass}>대칭축에 수직</span>!</div></Discover>
+                                <Discover><div style={{ fontSize: '0.82em', lineHeight: 1.4 }}>② 대응점은 <span className="hl-y">대칭축에서 같은 거리</span>!</div></Discover>
+                            </Fragment>}
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        const L5 = ({ lesson, onComplete }) => {
+            const G = 40, COLS = 14, ROWS = 9, AXIS = 7;
+            const VBW = COLS * G, VBH = ROWS * G;
+            const TOP = { x: AXIS, y: 1 }, BOT = { x: AXIS, y: 8 };
+            const PROBS = [
+                { left: [{ x: 3, y: 2 }, { x: 2, y: 5 }, { x: 3, y: 7 }], name: '뾰족한 꽃잎' },
+                { left: [{ x: 4, y: 2 }, { x: 1, y: 4 }, { x: 4, y: 6 }, { x: 3, y: 7 }], name: '비대칭 잎' },
+                { left: [{ x: 2, y: 3 }, { x: 3, y: 5 }, { x: 2, y: 7 }], name: '안쪽 굽은 도형' },
+                { left: [{ x: 5, y: 2 }, { x: 1, y: 4 }, { x: 5, y: 6 }, { x: 4, y: 8 }], name: '긴 꼬리 도형' },
+                { left: [{ x: 3, y: 2 }, { x: 1, y: 3 }, { x: 2, y: 5 }, { x: 1, y: 7 }, { x: 3, y: 8 }], name: '울퉁불퉁 도형' },
+            ];
+            const [pIdx, setPIdx] = useState(0);
+            const LEFT_PTS = PROBS[pIdx].left;
+            const TARGETS = LEFT_PTS.map(p => ({ x: 2 * AXIS - p.x, y: p.y }));
+            const svgRef = useRef(null);
+            const toCoord = useSvgCoord(svgRef);
+            const [phase, setPhase] = useState(0);
+            const [marks, setMarks] = useState([]);
+            const [folded, setFolded] = useState(false);
+
+            const isLast = pIdx === PROBS.length - 1;
+            useEffect(() => { if (folded && isLast) setTimeout(onComplete, 1500); }, [folded, isLast]);
+
+            const nextProblem = () => {
+                setPIdx(pIdx + 1);
+                setMarks([]); setFolded(false); setPhase(1);
+            };
+
+            const onClick = (e) => {
+                if (phase !== 1 || marks.length >= LEFT_PTS.length) return;
+                const c = toCoord(e); if (!c) return;
+                const gx = Math.round(c.x / G), gy = Math.round(c.y / G);
+                if (gx <= AXIS) return;
+                const idx = marks.length, t = TARGETS[idx];
+                if (gy !== t.y) return;
+                const ok = gx === t.x;
+                setMarks(m => [...m, { x: gx, y: gy, ok }]);
+                if (ok && marks.length + 1 === LEFT_PTS.length) setTimeout(() => setPhase(2), 500);
+            };
+
+            const halfPath = [TOP, ...LEFT_PTS, BOT].map(p => `${p.x * G},${p.y * G}`).join(' ');
+            const fullPoly = phase >= 2 ? [TOP, ...LEFT_PTS, BOT, ...[...TARGETS].reverse()].map(p => `${p.x * G},${p.y * G}`).join(' ') : null;
+
+            if (phase === 0) {
+                return (
+                    <main className="page-main page-pad" style={{ display: 'grid', placeItems: 'center' }}>
+                        <div className="surface max-w-2xl text-center" style={{ padding: 'clamp(1.5rem,3vw,2.5rem)' }}>
+                            <Mascot size={88} />
+                            <div className="ff-display t-xl mt-3 mb-2" style={{ color: lesson.deep }}>이제 네 차례야!</div>
+                            <p className="t-base mb-5" style={{ color: 'var(--ink-2)' }}>
+                                <b className={lesson.hlClass}>5개 도형</b>의 절반이 있어요. 대응점을 찍어 완성한 다음 <span className="hl">접어서</span> 확인해요.
+                            </p>
+                            <button onClick={() => setPhase(1)} className="btn btn-primary" style={{ background: lesson.color }}>시작 →</button>
+                        </div>
+                    </main>
+                );
+            }
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg ref={svgRef} viewBox={`0 0 ${VBW} ${VBH}`} className={`w-full h-full ${phase === 1 ? 'cursor-crosshair' : ''}`} onClick={onClick}>
+                                <defs>
+                                    <pattern id="l5g" width={G} height={G} patternUnits="userSpaceOnUse"><path d={`M ${G} 0 L 0 0 0 ${G}`} fill="none" stroke="var(--line-soft)" strokeWidth="0.8" /></pattern>
+                                    <clipPath id="l5L"><rect x="0" y="0" width={AXIS * G} height={VBH} /></clipPath>
+                                    <clipPath id="l5R"><rect x={AXIS * G} y="0" width={VBW - AXIS * G} height={VBH} /></clipPath>
+                                </defs>
+                                <rect width={VBW} height={VBH} fill="url(#l5g)" />
+
+                                {phase === 1 && (
+                                    <polyline points={halfPath} fill="none" stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round" />
+                                )}
+
+                                {phase >= 2 && fullPoly && (
+                                    <Fragment>
+                                        {/* 면 채움 — 옅게 배경으로 (접히면 더 옅게) */}
+                                        <polygon points={fullPoly} fill={lesson.light} fillOpacity={folded ? 0.3 : 0.45} stroke="none" />
+
+                                        {/* 왼쪽 절반(원래 있던 변) — 기본 색, 항상 위치 고정 */}
+                                        <g clipPath="url(#l5L)">
+                                            <polygon points={fullPoly} fill="none" stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" />
+                                        </g>
+
+                                        {/* 오른쪽 절반(학생이 만든 새 변) — 강조 색, 접기 시 천천히 좌측으로 접힘 */}
+                                        <g style={{
+                                            transform: folded ? `matrix(-1, 0, 0, 1, ${2 * AXIS * G}, 0)` : 'matrix(1, 0, 0, 1, 0, 0)',
+                                            transition: 'transform 1.6s cubic-bezier(0.5, 0, 0.3, 1)'
+                                        }}>
+                                            <g clipPath="url(#l5R)">
+                                                <polygon points={fullPoly} fill="none" stroke="#FF7B53" strokeWidth="4"
+                                                    strokeLinejoin="round" />
+                                            </g>
+                                        </g>
+                                    </Fragment>
+                                )}
+
+                                <line x1={AXIS * G} y1="0" x2={AXIS * G} y2={VBH} stroke={lesson.color} strokeWidth="2.5" strokeDasharray="6,4" />
+                                <text x={AXIS * G + 8} y="22" fontSize="14" fill={lesson.deep}>대칭축</text>
+
+                                {!folded && [TOP, BOT].map((p, i) => <circle key={i} cx={p.x * G} cy={p.y * G} r="6" fill={lesson.deep} />)}
+                                {!folded && LEFT_PTS.map((p, i) => <circle key={`lp-${i}`} cx={p.x * G} cy={p.y * G} r="6" fill={lesson.deep} />)}
+
+                                {phase === 1 && marks.length < TARGETS.length && (() => {
+                                    const t = TARGETS[marks.length];
+                                    const src = LEFT_PTS[marks.length];
+                                    return (
+                                        <g>
+                                            <line x1={src.x * G} y1={src.y * G} x2={t.x * G} y2={t.y * G} stroke={lesson.color} strokeWidth="1.5" strokeDasharray="4,3" opacity="0.7" />
+                                            <circle cx={t.x * G} cy={t.y * G} r="10" fill="none" stroke={lesson.color} strokeWidth="2.5" strokeDasharray="3,2" className="a-ring" />
+                                        </g>
+                                    );
+                                })()}
+
+                                {!folded && marks.map((m, i) => <circle key={`m-${i}`} cx={m.x * G} cy={m.y * G} r="8" fill={m.ok ? 'var(--ok)' : 'var(--warn)'} stroke="white" strokeWidth="2.5" />)}
+
+                                {folded && <text x={VBW / 2} y={VBH - 10} textAnchor="middle" fontSize="18" fontWeight="800" fill="var(--ok)">✨ 양쪽이 완전히 겹쳤어요!</text>}
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <div className="surface" style={{ padding: '0.5rem 0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                                <span className="ff-display t-sm" style={{ color: 'var(--ink-3)' }}>문제 <b style={{color: lesson.deep, fontSize:'1.1em'}}>{pIdx + 1}</b> / {PROBS.length}</span>
+                                <span className="t-sm" style={{ color: lesson.deep }}>{PROBS[pIdx].name}</span>
+                            </div>
+                            <Says color={lesson.deep}>
+                                {phase === 1 && <Fragment><span className={lesson.hlClass}>같은 줄, 같은 거리</span>에 대응점을 찍어요. ({marks.length}/{LEFT_PTS.length})</Fragment>}
+                                {phase === 2 && !folded && <Fragment>잘 그렸어요! <span style={{color:'#FF7B53', fontWeight:'bold'}}>주황색</span>이 네가 만든 변이에요. <span className="hl">접어서</span> 확인!</Fragment>}
+                                {folded && !isLast && <Fragment>✨ 완성! 다음 도형으로!</Fragment>}
+                                {folded && isLast && <Fragment>✨ 5문제 모두 완성! 선대칭 마스터!</Fragment>}
+                            </Says>
+                            {phase === 1 && marks.some(m => !m.ok) && (
+                                <button onClick={() => setMarks([])} className="btn btn-soft">다시 찍기</button>
+                            )}
+                            {phase === 2 && !folded && (
+                                <button onClick={() => setFolded(true)} className="btn btn-primary" style={{ background: lesson.color }}>접어보기 →</button>
+                            )}
+                            {folded && !isLast && (
+                                <button onClick={nextProblem} className="btn btn-primary" style={{ background: lesson.color }}>다음 도형 →</button>
+                            )}
+                            {folded && isLast && <Discover>대응점은 대칭축에서 <span className={lesson.hlClass}>같은 거리</span>, <span className="hl-y">수직</span>! 이 성질로 그릴 수 있어요.</Discover>}
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        window.registerStages('line', [L1, L2, L3, L4, L5]);
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+        const { Says, Discover, Hint, StageBody, Split, useSvgCoord, Mascot } = window.SHELL;
+
+        const P1 = ({ lesson, onComplete }) => {
+            const [rotated, setRotated] = useState(false);
+            useEffect(() => { if (rotated) setTimeout(onComplete, 1300); }, [rotated]);
+            const POLY = '-70,-32 60,-32 70,32 -60,32';
+            return (
+                <StageBody>
+                    <div className="h-full w-full grid items-center min-h-0 md:grid-cols-2 grid-cols-1" style={{ gap: 'var(--gap-md)' }}>
+                        <div className="surface min-h-0 h-full grid place-items-center" style={{ padding: '1rem' }}>
+                            <svg viewBox="-150 -100 300 200" className="w-full h-full" style={{ maxHeight: 'min(62vh, 600px)' }}>
+                                <polygon points={POLY} fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeDasharray="4,3" opacity="0.65" />
+                                <g style={{ transform: rotated ? 'rotate(180deg)' : 'rotate(0deg)', transformOrigin: '0 0', transition: 'transform 1.5s cubic-bezier(0.5, 0, 0.3, 1)' }}>
+                                    <polygon points={POLY} fill={lesson.light} stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" />
+                                </g>
+                                <circle cx="0" cy="0" r="7" fill={lesson.deep} stroke="white" strokeWidth="2.5" />
+                                <text x="14" y="6" fontSize="13" fill={lesson.deep}>중심</text>
+                                {rotated && <text x="0" y="85" textAnchor="middle" fontSize="16" fill={lesson.deep}>처음과 똑같이 겹쳐요</text>}
+                            </svg>
+                        </div>
+                        <div className="flex flex-col min-h-0 justify-center" style={{ gap: 'var(--gap-md)' }}>
+                            <Says color={lesson.deep}>
+                                가운데 점을 중심으로 <span className={lesson.hlClass}>180° 돌려볼까요</span>?
+                            </Says>
+                            {!rotated && (
+                                <button onClick={() => setRotated(true)} className="btn btn-primary self-start" style={{ background: lesson.color }}>180° 돌려요 →</button>
+                            )}
+                            {rotated && (
+                                <Discover>
+                                    한 점을 중심으로 <span className="hl-y">180° 돌렸을 때</span> 처음과 완전히 겹치는 도형이 <span className={lesson.hlClass}>점대칭 도형</span>!
+                                    이때 그 점을 <span className="hl-pk">대칭의 중심</span>이라고 합니다.
+                                </Discover>
+                            )}
+                        </div>
+                    </div>
+                </StageBody>
+            );
+        };
+
+        const RotByDrag = ({ poly, fill, stroke, onAt180, isSym }) => {
+            const [rot, setRot] = useState(0);
+            const dragging = useRef(false);
+            const startMA = useRef(0);
+            const startR = useRef(0);
+            const svgRef = useRef(null);
+            const toCoord = useSvgCoord(svgRef);
+
+            const onDown = (e) => {
+                e.stopPropagation();
+                const c = toCoord(e); if (!c) return;
+                dragging.current = true;
+                startMA.current = Math.atan2(c.y, c.x) * 180 / Math.PI;
+                startR.current = rot;
+                e.preventDefault();
+            };
+            useEffect(() => {
+                const move = (e) => {
+                    if (!dragging.current) return;
+                    const c = toCoord(e); if (!c) return;
+                    const a = Math.atan2(c.y, c.x) * 180 / Math.PI;
+                    let newR = startR.current + (a - startMA.current);
+                    newR = ((newR % 360) + 360) % 360;
+                    setRot(newR);
+                    if (e.cancelable) e.preventDefault();
+                };
+                const up = () => { dragging.current = false; };
+                window.addEventListener('mousemove', move);
+                window.addEventListener('mouseup', up);
+                window.addEventListener('touchmove', move, { passive: false });
+                window.addEventListener('touchend', up);
+                return () => {
+                    window.removeEventListener('mousemove', move);
+                    window.removeEventListener('mouseup', up);
+                    window.removeEventListener('touchmove', move);
+                    window.removeEventListener('touchend', up);
+                };
+            }, [rot, toCoord]);
+
+            const at180 = rot >= 170 && rot <= 190;
+            useEffect(() => { if (at180) onAt180 && onAt180(); }, [at180]);
+
+            return (
+                <div className="relative h-full">
+                    <svg ref={svgRef} viewBox="-65 -55 130 110" className="w-full h-full" style={{ touchAction: 'none' }}>
+                        <polygon points={poly} fill="none" stroke="var(--ink-3)" strokeWidth="1.5" strokeDasharray="3,2" opacity="0.6" />
+                        <g transform={`rotate(${rot})`} style={{ cursor: 'grab' }} onMouseDown={onDown} onTouchStart={onDown}>
+                            <polygon points={poly} fill={fill} stroke={stroke} strokeWidth="3" strokeLinejoin="round" />
+                        </g>
+                        <circle cx="0" cy="0" r="3.5" fill={stroke} />
+                    </svg>
+                    <div className="absolute bottom-1 right-2 t-xs ff-display" style={{ color: at180 ? (isSym ? 'var(--ok)' : 'var(--warn)') : 'var(--ink-3)' }}>{Math.round(rot)}°</div>
+                </div>
+            );
+        };
+
+        const P2 = ({ lesson, onComplete }) => {
+            const SHAPES = [
+                { id: 'rect', name: '직사각형', sym: true,  poly: '-55,-28 55,-28 55,28 -55,28' },
+                { id: 'para', name: '평행사변형', sym: true, poly: '-60,-22 38,-22 60,22 -38,22' },
+                { id: 'iso', name: '이등변삼각형', sym: false, poly: '0,-42 42,30 -42,30' },
+                { id: 'trL', name: '직각삼각형', sym: false, poly: '-45,30 45,30 -45,-30' }
+            ];
+            const [tested, setTested] = useState({});
+            const all = Object.keys(tested).length === SHAPES.length;
+            useEffect(() => { if (all) onComplete(); }, [all]);
+
+            return (
+                <StageBody>
+                    <div className="h-full w-full flex flex-col min-h-0" style={{ gap: 'var(--gap-sm)' }}>
+                        <Says color={lesson.deep}>
+                            도형을 <span className={lesson.hlClass}>마우스로 잡고 돌려봐요</span>. 180°에서 회색 점선과 <b>딱 겹치면</b> 점대칭이에요. <b>({Object.keys(tested).length}/{SHAPES.length})</b>
+                        </Says>
+                        <div className="flex-1 grid min-h-0" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--gap-sm)' }}>
+                            {SHAPES.map(s => {
+                                const isT = !!tested[s.id];
+                                return (
+                                    <div key={s.id} className="surface flex flex-col" style={{ padding: '0.8rem', borderColor: isT ? (s.sym ? lesson.color : 'var(--warn)') : 'var(--line-soft)' }}>
+                                        <div className="ff-display t-base text-center mb-1" style={{ color: 'var(--ink-2)' }}>{s.name}</div>
+                                        <div className="flex-1 min-h-0">
+                                            <RotByDrag poly={s.poly} fill={lesson.light} stroke={lesson.deep}
+                                                onAt180={() => setTested(t => ({ ...t, [s.id]: true }))}
+                                                isSym={s.sym} />
+                                        </div>
+                                        {isT && <div className="t-sm text-center mt-1 ff-display" style={{ color: s.sym ? lesson.color : 'var(--warn)' }}>
+                                            {s.sym ? '✓ 점대칭' : '✗ 점대칭 아님'}
+                                        </div>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {all && <Discover>180°에서 처음과 같은 도형이 <span className={lesson.hlClass}>점대칭 도형</span>!</Discover>}
+                    </div>
+                </StageBody>
+            );
+        };
+
+        const P3 = ({ lesson, onComplete }) => {
+            const POLY = '-80,-40 60,-40 80,40 -60,40';
+            const CANDS = [
+                { id: 'tl', x: -80, y: -40, label: '꼭짓점 위' },
+                { id: 'mid', x: 0, y: 0, label: '한가운데', correct: true },
+                { id: 'edge', x: -10, y: -40, label: '윗변 위' }
+            ];
+            const [pick, setPick] = useState(null);
+            const [rot, setRot] = useState(0);
+            const [tested, setTested] = useState({});
+            const handle = id => {
+                if (pick === id) return;
+                setPick(id); setRot(0);
+                setTimeout(() => setRot(180), 250);
+                setTimeout(() => setTested(t => ({ ...t, [id]: true })), 1500);
+            };
+            const got = pick === 'mid' && tested.mid;
+            useEffect(() => { if (got) onComplete(); }, [got]);
+            const picked = pick ? CANDS.find(c => c.id === pick) : null;
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg viewBox="-150 -100 300 200" className="w-full h-full">
+                                <polygon points={POLY} fill="none" stroke="var(--ink-3)" strokeWidth="1.5" strokeDasharray="4,3" opacity="0.5" />
+                                <g transform={picked ? `translate(${picked.x} ${picked.y}) rotate(${rot}) translate(${-picked.x} ${-picked.y})` : ''} style={{ transition: rot ? 'transform 1.2s ease' : 'none' }}>
+                                    <polygon points={POLY} fill={lesson.light} stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" />
+                                </g>
+                                {CANDS.map(c => (
+                                    <g key={c.id} onClick={() => handle(c.id)} style={{ cursor: 'pointer' }}>
+                                        <circle cx={c.x} cy={c.y} r="20" fill="rgba(152,112,224,0.12)" stroke={lesson.color} strokeWidth="2" strokeDasharray="3,2" />
+                                        <circle cx={c.x} cy={c.y} r={pick === c.id ? 10 : 6} fill={pick === c.id ? (c.correct ? 'var(--ok)' : 'var(--warn)') : lesson.deep} stroke="white" strokeWidth="2.5" />
+                                        <text x={c.x} y={c.y + 5} textAnchor="middle" fontSize="13" fill="white" fontWeight="800" style={{ pointerEvents: 'none' }}>{pick === c.id ? (c.correct ? '✓' : '✗') : ''}</text>
+                                    </g>
+                                ))}
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <Says color={lesson.deep}>
+                                <span className={lesson.hlClass}>대칭의 중심</span>은 어디일까요? 점 3개 중 하나를 눌러봐요.
+                            </Says>
+                            <div className="surface" style={{ padding: '0.6rem 0.9rem' }}>
+                                <div className="ff-display t-sm" style={{ color: 'var(--ink-3)' }}>시도</div>
+                                {CANDS.map(c => (
+                                    <div key={c.id} className="flex justify-between t-sm py-0.5" style={{ color: tested[c.id] ? (c.correct ? lesson.color : 'var(--warn)') : 'var(--ink-3)' }}>
+                                        <span>{c.label}</span><span>{tested[c.id] ? (c.correct ? '✓' : '✗') : '·'}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            {pick && !got && tested[pick] && !CANDS.find(c => c.id === pick).correct && (
+                                <Hint color="var(--warn)">그 점을 중심으로 돌리니 어긋났어요. 다른 점을 시도해봐요.</Hint>
+                            )}
+                            {got && <Discover>한가운데가 <span className={lesson.hlClass}>대칭의 중심</span>! 점대칭 도형의 중심은 단 하나입니다.</Discover>}
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        const P4 = ({ lesson, onComplete }) => {
+            const VBW = 580, VBH = 340, CX = 290, CY = 170;
+            const PTS = [{ x: 180, y: 100, n: 'ㄱ' }, { x: 380, y: 100, n: 'ㄴ' }, { x: 400, y: 240, n: 'ㄷ' }, { x: 200, y: 240, n: 'ㄹ' }];
+            const PAIRS = [{ a: PTS[0], b: PTS[2], an: 'ㄱ', bn: 'ㄷ' }, { a: PTS[1], b: PTS[3], an: 'ㄴ', bn: 'ㄹ' }];
+            const [explored, setExplored] = useState([]);
+            useEffect(() => { if (explored.length === PAIRS.length) onComplete(); }, [explored]);
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg viewBox={`0 0 ${VBW} ${VBH}`} className="w-full h-full">
+                                <defs><pattern id="p4g" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M 22 0 L 0 0 0 22" fill="none" stroke="var(--line-soft)" strokeWidth="0.8" /></pattern></defs>
+                                <rect width={VBW} height={VBH} fill="url(#p4g)" />
+                                <polygon points={PTS.map(p => `${p.x},${p.y}`).join(' ')} fill={lesson.light} stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" />
+                                {PAIRS.map((pr, i) => {
+                                    const ex = explored.includes(i);
+                                    if (!ex) return null;
+                                    const d = Math.hypot(pr.a.x - CX, pr.a.y - CY);
+                                    return (
+                                        <g key={i}>
+                                            <line x1={pr.a.x} y1={pr.a.y} x2={pr.b.x} y2={pr.b.y} stroke={lesson.color} strokeWidth="2.5" strokeDasharray="5,3" />
+                                            <text x={(pr.a.x + CX) / 2 + 8} y={(pr.a.y + CY) / 2 - 5} fontSize="13" fill={lesson.deep}>{Math.round(d / 22)}칸</text>
+                                            <text x={(pr.b.x + CX) / 2 + 8} y={(pr.b.y + CY) / 2 - 5} fontSize="13" fill={lesson.deep}>{Math.round(d / 22)}칸</text>
+                                        </g>
+                                    );
+                                })}
+                                {PAIRS.map((pr, i) => {
+                                    const ex = explored.includes(i);
+                                    return (
+                                        <g key={`p-${i}`}>
+                                            <circle cx={pr.a.x} cy={pr.a.y} r="9" fill={ex ? lesson.deep : lesson.color} stroke="white" strokeWidth="2.5"
+                                                className={ex ? '' : 'a-ring'} style={{ cursor: 'pointer' }} onClick={() => !ex && setExplored(e => [...e, i])} />
+                                            <text x={pr.a.x - 18} y={pr.a.y + 5} fontSize="14" fill={lesson.deep}>{pr.an}</text>
+                                            <circle cx={pr.b.x} cy={pr.b.y} r="7" fill={ex ? lesson.deep : lesson.color} stroke="white" strokeWidth="2" opacity={ex ? 1 : 0.4} />
+                                            <text x={pr.b.x + 10} y={pr.b.y + 18} fontSize="14" fill={lesson.deep} opacity={ex ? 1 : 0.4}>{pr.bn}</text>
+                                        </g>
+                                    );
+                                })}
+                                <circle cx={CX} cy={CY} r="9" fill="var(--warn)" stroke="white" strokeWidth="3" />
+                                <text x={CX + 14} y={CY + 5} fontSize="13" fill="var(--warn)">중심</text>
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <Says color={lesson.deep}>
+                                <b>ㄱ</b>과 <b>ㄴ</b>을 차례로 눌러요. 대응점까지 선이 그어집니다. <b>({explored.length}/{PAIRS.length})</b>
+                            </Says>
+                            {explored.length < PAIRS.length && <Hint>선이 어디를 지나는지, 거리가 어떤지 봐요.</Hint>}
+                            {explored.length === PAIRS.length && <Fragment>
+                                <Discover>① 대응점을 이은 선은 <span className={lesson.hlClass}>대칭의 중심을 지나요</span>.</Discover>
+                                <Discover>② 중심에서 대응점까지의 거리는 <span className={lesson.hlClass}>서로 같아요</span>.</Discover>
+                            </Fragment>}
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        const P5 = ({ lesson, onComplete }) => {
+            const G = 40, COLS = 14, ROWS = 9;
+            const VBW = COLS * G, VBH = ROWS * G;
+            const CENTER = { x: 7, y: 4 };
+            // 첨부 PDF 참고 — HALF 첫/마지막은 중심선(y=4) 위에 두 — 전체 변의 정확히 절반이 보이고 중심에서 교차 안 함
+            const PROBS = [
+                { half: [{ x: 3, y: 4 }, { x: 5, y: 2 }, { x: 9, y: 2 }, { x: 11, y: 4 }], name: '육각형 모양' },
+                { half: [{ x: 3, y: 4 }, { x: 5, y: 2 }, { x: 11, y: 4 }], name: '평행사변형' },
+                { half: [{ x: 3, y: 4 }, { x: 4, y: 2 }, { x: 7, y: 1 }, { x: 8, y: 2 }, { x: 11, y: 4 }], name: '들어간 화살표' },
+                { half: [{ x: 3, y: 4 }, { x: 4, y: 1 }, { x: 10, y: 1 }, { x: 11, y: 4 }], name: '사다리꼴' },
+                { half: [{ x: 2, y: 4 }, { x: 4, y: 2 }, { x: 7, y: 3 }, { x: 10, y: 2 }, { x: 12, y: 4 }], name: 'M자 도형' },
+            ];
+            const [pIdx, setPIdx] = useState(0);
+            const HALF = PROBS[pIdx].half;
+            const TARGETS = HALF.map(p => ({ x: 2 * CENTER.x - p.x, y: 2 * CENTER.y - p.y }));
+            // 첫/마지막은 중심선 위라 점대칭 대응이 HALF의 다른 끝점과 같음 → 학생이 찍을 점은 중간만
+            const TARGETS_CLICK = TARGETS.slice(1, -1);
+            const svgRef = useRef(null);
+            const toCoord = useSvgCoord(svgRef);
+            const [phase, setPhase] = useState(0);
+            const [marks, setMarks] = useState([]);
+            const [rotated, setRotated] = useState(false);
+
+            const isLast = pIdx === PROBS.length - 1;
+            useEffect(() => { if (rotated && isLast) setTimeout(onComplete, 1500); }, [rotated, isLast]);
+
+            const nextProblem = () => {
+                setPIdx(pIdx + 1);
+                setMarks([]); setRotated(false); setPhase(1);
+            };
+
+            const onClick = (e) => {
+                if (phase !== 1 || marks.length >= TARGETS_CLICK.length) return;
+                const c = toCoord(e); if (!c) return;
+                const gx = Math.round(c.x / G), gy = Math.round(c.y / G);
+                if (gy <= CENTER.y) return;
+                const idx = marks.length, t = TARGETS_CLICK[idx];
+                const ok = gx === t.x && gy === t.y;
+                setMarks(m => [...m, { x: gx, y: gy, ok }]);
+                if (ok && marks.length + 1 === TARGETS_CLICK.length) setTimeout(() => setPhase(2), 500);
+            };
+
+            const halfPath = HALF.map(p => `${p.x * G},${p.y * G}`).join(' ');
+            const fullPoly = phase >= 2 ? [...HALF, ...TARGETS_CLICK].map(p => `${p.x * G},${p.y * G}`).join(' ') : null;
+
+            if (phase === 0) {
+                return (
+                    <main className="page-main page-pad" style={{ display: 'grid', placeItems: 'center' }}>
+                        <div className="surface max-w-2xl text-center" style={{ padding: 'clamp(1.5rem,3vw,2.5rem)' }}>
+                            <Mascot size={88} />
+                            <div className="ff-display t-xl mt-3 mb-2" style={{ color: lesson.deep }}>이제 네 차례야!</div>
+                            <p className="t-base mb-5" style={{ color: 'var(--ink-2)' }}>
+                                <b className={lesson.hlClass}>5개 도형</b>의 절반과 중심점이 있어요. 대응점을 찍어 완성한 다음 <span className="hl">180° 돌려서</span> 확인해요.
+                            </p>
+                            <button onClick={() => setPhase(1)} className="btn btn-primary" style={{ background: lesson.color }}>시작 →</button>
+                        </div>
+                    </main>
+                );
+            }
+
+            return (
+                <StageBody>
+                    <Split
+                        canvas={
+                            <svg ref={svgRef} viewBox={`0 0 ${VBW} ${VBH}`} className={`w-full h-full ${phase === 1 ? 'cursor-crosshair' : ''}`} onClick={onClick}>
+                                <defs><pattern id="p5g" width={G} height={G} patternUnits="userSpaceOnUse"><path d={`M ${G} 0 L 0 0 0 ${G}`} fill="none" stroke="var(--line-soft)" strokeWidth="0.8" /></pattern></defs>
+                                <rect width={VBW} height={VBH} fill="url(#p5g)" />
+
+                                {phase === 1 && (
+                                    <polyline points={halfPath} fill="none" stroke={lesson.deep} strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round" />
+                                )}
+
+                                {phase === 1 && marks.length < TARGETS_CLICK.length && (() => {
+                                    // 가이드: HALF의 중간 점(인덱스 1부터)의 대응점이 학생이 찍을 위치
+                                    const src = HALF[marks.length + 1];
+                                    const t = TARGETS_CLICK[marks.length];
+                                    return (
+                                        <g>
+                                            <line x1={src.x * G} y1={src.y * G} x2={t.x * G} y2={t.y * G} stroke={lesson.color} strokeWidth="1.5" strokeDasharray="4,3" opacity="0.7" />
+                                            <circle cx={t.x * G} cy={t.y * G} r="10" fill="none" stroke={lesson.color} strokeWidth="2.5" strokeDasharray="3,2" className="a-ring" />
+                                        </g>
+                                    );
+                                })()}
+
+                                {marks.map((m, i) => <circle key={`m-${i}`} cx={m.x * G} cy={m.y * G} r="8" fill={m.ok ? 'var(--ok)' : 'var(--warn)'} stroke="white" strokeWidth="2.5" />)}
+
+                                {HALF.map((p, i) => <circle key={`h-${i}`} cx={p.x * G} cy={p.y * G} r="6" fill={lesson.deep} stroke="white" strokeWidth="2" />)}
+
+                                {phase >= 2 && fullPoly && (
+                                    <g style={{ transformOrigin: `${CENTER.x * G}px ${CENTER.y * G}px`, transform: rotated ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 1.5s cubic-bezier(0.5,0,0.3,1)' }}>
+                                        {/* 면 채움 (옅게) */}
+                                        <polygon points={fullPoly} fill={lesson.light} fillOpacity="0.45" stroke="none" />
+                                        {/* 기존 절반 변 (위쪽 HALF) */}
+                                        <polyline points={HALF.map(p => `${p.x * G},${p.y * G}`).join(' ')}
+                                            fill="none" stroke={lesson.deep} strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" />
+                                        {/* 새 변 (학생이 만든 부분) — HALF 마지막 → TARGETS_CLICK → HALF 첫, 강조 색 */}
+                                        <polyline points={[HALF[HALF.length - 1], ...TARGETS_CLICK, HALF[0]].map(p => `${p.x * G},${p.y * G}`).join(' ')}
+                                            fill="none" stroke="#FF7B53" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" />
+                                    </g>
+                                )}
+                                {rotated && fullPoly && (
+                                    <polygon points={fullPoly} fill="none" stroke="var(--ok)" strokeWidth="2.5" strokeDasharray="6,3" />
+                                )}
+
+                                <circle cx={CENTER.x * G} cy={CENTER.y * G} r="9" fill="var(--warn)" stroke="white" strokeWidth="3" />
+                                <text x={CENTER.x * G + 14} y={CENTER.y * G + 5} fontSize="14" fill="var(--warn)">중심</text>
+
+                                {rotated && <text x={VBW / 2} y={VBH - 12} textAnchor="middle" fontSize="18" fontWeight="800" fill="var(--ok)">✨ 처음과 똑같이 겹쳤어요!</text>}
+                            </svg>
+                        }
+                        panel={<Fragment>
+                            <div className="surface" style={{ padding: '0.5rem 0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                                <span className="ff-display t-sm" style={{ color: 'var(--ink-3)' }}>문제 <b style={{color: lesson.deep, fontSize:'1.1em'}}>{pIdx + 1}</b> / {PROBS.length}</span>
+                                <span className="t-sm" style={{ color: lesson.deep }}>{PROBS[pIdx].name}</span>
+                            </div>
+                            <Says color={lesson.deep}>
+                                {phase === 1 && <Fragment>중심에서 <span className={lesson.hlClass}>반대편 같은 거리</span>에 대응점 찍기 ({marks.length}/{TARGETS_CLICK.length})</Fragment>}
+                                {phase === 2 && !rotated && <Fragment>잘 그렸어요! <span style={{color:'#FF7B53', fontWeight:'bold'}}>주황색</span>이 네가 만든 변. <span className="hl">180° 돌려서</span> 확인!</Fragment>}
+                                {rotated && !isLast && <Fragment>✨ 똑같이 겹쳤어요! 다음 문제!</Fragment>}
+                                {rotated && isLast && <Fragment>✨ 5문제 모두 완성! 점대칭 마스터!</Fragment>}
+                            </Says>
+                            {phase === 1 && marks.some(m => !m.ok) && (
+                                <button onClick={() => setMarks([])} className="btn btn-soft">다시 찍기</button>
+                            )}
+                            {phase === 2 && !rotated && (
+                                <button onClick={() => setRotated(true)} className="btn btn-primary" style={{ background: lesson.color }}>180° 돌려보기 →</button>
+                            )}
+                            {rotated && !isLast && (
+                                <button onClick={nextProblem} className="btn btn-primary" style={{ background: lesson.color }}>다음 도형 →</button>
+                            )}
+                            {rotated && isLast && <Discover>대응점은 <span className={lesson.hlClass}>중심에서 같은 거리</span>, 대응점을 이은 선은 <span className="hl-y">중심을 지나요</span>.</Discover>}
+                        </Fragment>}
+                    />
+                </StageBody>
+            );
+        };
+
+        window.registerStages('pt', [P1, P2, P3, P4, P5]);
+    </script>
 </body>
+
 </html>
+
+
+
